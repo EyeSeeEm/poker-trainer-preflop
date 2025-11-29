@@ -1,6 +1,6 @@
 .poker-table-container {
   width: 100%;
-  max-width: 680px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 10px;
 }
@@ -8,7 +8,7 @@
 .table-outer-rail {
   position: relative;
   width: 100%;
-  padding-top: 70%;
+  padding-top: 80%;
   background: linear-gradient(145deg, #2a1810, #1a0f0a);
   border-radius: 50%;
   box-shadow:
@@ -69,7 +69,7 @@
 
 .pot-amount {
   color: #ffd700;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -107,19 +107,19 @@
 .dealer-button-table {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   background: linear-gradient(145deg, #f5f5dc, #daa520);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   color: #1a1a1a;
-  border: 3px solid #ffd700;
+  border: 2px solid #ffd700;
   box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.5),
     inset 0 1px 2px rgba(255, 255, 255, 0.5);
   z-index: 15;
 }
@@ -131,7 +131,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 10px;
   z-index: 5;
   animation: bet-appear 0.3s ease-out;
 }
@@ -163,13 +163,36 @@
 }
 
 .bet-amount {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   background: rgba(0, 0, 0, 0.5);
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 8px;
+}
+
+/* Hero bet - positioned above player */
+.player-bet.hero-bet {
+  z-index: 12;
+}
+
+.player-bet.hero-bet .bet-chips {
+  transform: scale(1.1);
+}
+
+/* Action text shown below hero's chips after they act */
+.bet-action-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f39c12;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
 }
 
 /* Seat styling */
@@ -184,14 +207,14 @@
 }
 
 .seat-avatar {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   background: linear-gradient(145deg, #34495e, #2c3e50);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 28px;
   border: 3px solid #4a5a6a;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   transition: all 0.3s ease;
@@ -239,7 +262,7 @@
 }
 
 .seat-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #e0e0e0;
   letter-spacing: 0.5px;
@@ -265,16 +288,19 @@
 /* Action bubbles */
 .action-bubble {
   position: absolute;
-  top: -28px;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
   white-space: nowrap;
   padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 700;
   animation: bubble-appear 0.3s ease-out;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  z-index: 25;
 }
 
 @keyframes bubble-appear {

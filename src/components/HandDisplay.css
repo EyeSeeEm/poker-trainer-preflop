@@ -69,12 +69,12 @@
 }
 
 .corner-rank {
-  font-size: 26px;
+  font-size: 34px;
   font-weight: 700;
 }
 
 .corner-suit {
-  font-size: 20px;
+  font-size: 26px;
   margin-top: -2px;
 }
 
@@ -188,27 +188,28 @@
   font-size: 28px;
 }
 
-/* Mini size for history */
+/* Mini size for history - larger for readability */
 .size-mini .card {
-  width: 36px;
-  height: 50px;
-  border-radius: 4px;
+  width: 52px;
+  height: 72px;
+  border-radius: 5px;
 }
 
 .size-mini .card-overlap {
-  margin-left: -12px;
+  margin-left: -18px;
 }
 
 .size-mini .card-inner {
-  padding: 2px;
+  padding: 3px;
 }
 
 .size-mini .corner-rank {
-  font-size: 10px;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .size-mini .corner-suit {
-  font-size: 8px;
+  font-size: 18px;
 }
 
 .size-mini .center-suit {

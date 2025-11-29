@@ -21,7 +21,7 @@ const situations = {
       { key: 'bb_vs_passive_open', label: 'BB vs Passive Open' },
       { key: 'bb_vs_aggro_open', label: 'BB vs Aggro Open' },
       { key: 'btn_squeeze', label: 'BTN Squeeze' },
-      { key: 'ep_vs_pro_open', label: 'EP vs Pro Open' },
+      { key: 'ep_vs_pro_open', label: 'HJ vs UTG Pro Open' },
       { key: 'btn_vs_co_pro_open', label: 'BTN vs CO Pro Open' }
     ]
   },

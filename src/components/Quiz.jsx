@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import HandDisplay from './HandDisplay';
 import PokerTable from './PokerTable';
 import { getSmartRandomHand } from '../utils/smartHandSelection';
@@ -6,11 +6,42 @@ import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
-// Speed settings - added 'point' for dealer pointing at next player
+// Speed settings - added 'point' for dealer pointing at next player, 'quickFold' for intermediate folds
 const SPEED_SETTINGS = {
-  normal: { fold: 400, call: 600, raise: 900, initial: 100, feedback: 2000, point: 500 },
-  fast: { fold: 200, call: 350, raise: 500, initial: 100, feedback: 1200, point: 300 },
-  faster: { fold: 100, call: 150, raise: 250, initial: 100, feedback: 700, point: 150 }
+  normal: { fold: 400, call: 600, raise: 900, initial: 100, feedback: 2000, point: 500, quickFold: 50 },
+  fast: { fold: 200, call: 350, raise: 500, initial: 100, feedback: 1200, point: 300, quickFold: 50 },
+  faster: { fold: 100, call: 150, raise: 250, initial: 100, feedback: 700, point: 150, quickFold: 50 }
+};
+
+// Preflop action order (after blinds posted) - EP is same as UTG in 6-max
+const PREFLOP_ACTION_ORDER = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
+// Normalize position (EP = UTG)
+const normalizePosition = (pos) => pos === 'EP' ? 'UTG' : pos;
+
+// Get positions from UTG up to (but not including) a given position
+const getPositionsBefore = (pos) => {
+  const targetIdx = PREFLOP_ACTION_ORDER.indexOf(normalizePosition(pos));
+  if (targetIdx <= 0) return []; // UTG is first, nothing before
+  return PREFLOP_ACTION_ORDER.slice(0, targetIdx);
+};
+
+// Get positions between two positions in preflop order (after opener, before responder)
+const getPositionsBetween = (openerPos, responderPos) => {
+  const openerIdx = PREFLOP_ACTION_ORDER.indexOf(normalizePosition(openerPos));
+  const responderIdx = PREFLOP_ACTION_ORDER.indexOf(normalizePosition(responderPos));
+
+  if (openerIdx === -1 || responderIdx === -1) return [];
+
+  const positions = [];
+  // Preflop action goes in order
+  let idx = openerIdx + 1;
+  while (idx < PREFLOP_ACTION_ORDER.length && idx !== responderIdx) {
+    if (idx === responderIdx) break;
+    positions.push(PREFLOP_ACTION_ORDER[idx]);
+    idx++;
+  }
+  return positions;
 };
 
 // localStorage keys
@@ -83,6 +114,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [handHistory, setHandHistory] = useState([]); // Session history (recent 50 for display)
   const [nextToActPosition, setNextToActPosition] = useState(null);
   const [persistentHistory, setPersistentHistory] = useState(() => loadPersistentHistory());
+  const [selectedHistoryIndex, setSelectedHistoryIndex] = useState(null); // For detail view
+  const animationIdRef = useRef(0); // Track current animation to cancel stale ones
+  const historyPanelRef = useRef(null); // Ref for click outside detection
+  const settingsPanelRef = useRef(null); // Ref for click outside detection
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -92,85 +127,166 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   }, [scenarios]);
 
   // Build action sequence and player types for the current scenario
+  // Shows FULL hand action from UTG forward
   const buildActionSequence = useCallback((scenario) => {
     const actions = [];
     const types = {};
     const mapping = scenario;
     const heroPosition = mapping.positions[0];
 
-    // Add limpers first (they act before opens)
-    if (mapping.limper) {
-      actions.push({ position: mapping.limper, type: 'Limp', text: 'Limp' });
-      if (mapping.limperType) {
-        types[mapping.limper] = mapping.limperType;
+    // Helper to add quick folds for positions
+    const addFolds = (positions) => {
+      positions.forEach(pos => {
+        actions.push({ position: pos, type: 'Fold', text: 'Fold', isQuickFold: true });
+      });
+    };
+
+    // Set player types
+    if (mapping.villainType && mapping.villain) {
+      types[mapping.villain] = mapping.villainType;
+    }
+    if (mapping.villain2Type && mapping.villain2) {
+      types[mapping.villain2] = mapping.villain2Type;
+    }
+    if (mapping.limperType && mapping.limper) {
+      types[mapping.limper] = mapping.limperType;
+    }
+    if (mapping.limper2Type && mapping.limper2) {
+      types[mapping.limper2] = mapping.limper2Type;
+    }
+    if (mapping.callerType && mapping.caller) {
+      types[mapping.caller] = mapping.callerType;
+    }
+
+    // === OPEN RANGES: Hero opens ===
+    if (mapping.category === 'open_ranges') {
+      // Folds from UTG to hero
+      addFolds(getPositionsBefore(heroPosition));
+
+      // Handle limpers (they limp before hero opens)
+      if (mapping.limper) {
+        // Remove fold for limper position, add limp instead
+        const limperIdx = actions.findIndex(a => a.position === mapping.limper);
+        if (limperIdx >= 0) actions.splice(limperIdx, 1);
+        actions.push({ position: mapping.limper, type: 'Limp', text: 'Limp' });
       }
-    }
-
-    if (mapping.limper2) {
-      actions.push({ position: mapping.limper2, type: 'Limp', text: 'Limp' });
-      if (mapping.limper2Type) {
-        types[mapping.limper2] = mapping.limper2Type;
+      if (mapping.limper2) {
+        const limperIdx = actions.findIndex(a => a.position === mapping.limper2);
+        if (limperIdx >= 0) actions.splice(limperIdx, 1);
+        actions.push({ position: mapping.limper2, type: 'Limp', text: 'Limp' });
       }
+
+      // Hero raises (this is the decision the user makes, so don't add it to actions)
+      // Actions end before hero's decision
     }
 
-    // For vs_3bet scenarios: Hero opened first, then villain 3bets
-    if (mapping.category === 'vs_3bet_ranges' && mapping.villainAction === '3bet') {
-      // Show hero's opening raise first
-      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
-    }
+    // === VS OPEN RANGES: Villain opens, hero responds ===
+    else if (mapping.category === 'vs_open_ranges') {
+      // Folds from UTG to villain
+      addFolds(getPositionsBefore(mapping.villain));
 
-    // For vs_4bet scenarios: Villain opened, hero 3bet, now villain 4bets
-    if (mapping.category === 'vs_4bet_ranges' && mapping.villainAction === '4bet') {
-      // Show villain's opening raise first
+      // Villain opens
       actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
-      // Then hero's 3bet
+
+      // For squeeze: there's a caller between villain and hero
+      if (mapping.caller) {
+        // Folds between villain and caller
+        addFolds(getPositionsBetween(mapping.villain, mapping.caller));
+        // Caller calls
+        actions.push({ position: mapping.caller, type: 'Call', text: 'Call' });
+        // Folds between caller and hero
+        addFolds(getPositionsBetween(mapping.caller, heroPosition));
+      } else {
+        // Folds from villain to hero
+        addFolds(getPositionsBetween(mapping.villain, heroPosition));
+      }
+
+      // Hero acts (decision point - not added)
+    }
+
+    // === VS 3BET RANGES: Hero opened, villain 3bets ===
+    else if (mapping.category === 'vs_3bet_ranges') {
+      // Folds from UTG to hero (quick folds)
+      addFolds(getPositionsBefore(heroPosition));
+
+      // Hero opens
+      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
+
+      // Folds from hero to villain - show with pointer since they happen after hero's open
+      const positionsBetween = getPositionsBetween(heroPosition, mapping.villain);
+      positionsBetween.forEach(pos => {
+        actions.push({ position: pos, type: 'Fold', text: 'Fold', isQuickFold: false });
+      });
+
+      // Villain 3-bets
+      actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet 9BB' });
+
+      // Hero acts (decision point - not added)
+    }
+
+    // === VS 4BET RANGES: Villain opened, hero 3bet, villain 4bets ===
+    // Full sequence showing: folds to villain, villain opens, folds to hero (with pointer),
+    // hero 3bets, villain 4bets, hero decides
+    else if (mapping.category === 'vs_4bet_ranges') {
+      // Folds from UTG to villain (quick folds)
+      addFolds(getPositionsBefore(mapping.villain));
+
+      // Villain opens
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
+
+      // Important folds from villain to hero - these should show with pointer indicator
+      // to help user understand the action flow
+      const positionsBetween = getPositionsBetween(mapping.villain, heroPosition);
+      positionsBetween.forEach(pos => {
+        // Mark these as significant folds (not quick) since they happen after the open
+        actions.push({ position: pos, type: 'Fold', text: 'Fold', isQuickFold: false });
+      });
+
+      // Hero 3-bets
       actions.push({ position: heroPosition, type: '3bet', text: '3-Bet 9BB', isHeroAction: true });
+
+      // Villain 4-bets (action goes directly back to original raiser)
+      actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet 22BB' });
+
+      // Hero acts (decision point - not added)
     }
 
-    // Add villain actions based on scenario type
-    if (mapping.villain) {
-      if (mapping.villainAction === 'open') {
-        actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
-      } else if (mapping.villainAction === '3bet') {
-        actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet 9BB' });
-      } else if (mapping.villainAction === '4bet') {
-        actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet 22BB' });
-      }
-      if (mapping.villainType) {
-        types[mapping.villain] = mapping.villainType;
-      }
-    }
+    // === COLD 4BET RANGES: V1 opens, V2 3bets, hero cold 4bets ===
+    else if (mapping.category === 'cold_4bet_ranges') {
+      // Folds from UTG to villain1
+      addFolds(getPositionsBefore(mapping.villain));
 
-    // Add second villain for cold 4bet scenarios
-    if (mapping.villain2) {
-      const actionText = mapping.villain2Action === '3bet' ? '3-Bet 9BB' :
-                        mapping.villain2Action === '4bet' ? '4-Bet 22BB' : mapping.villain2Action;
-      actions.push({ position: mapping.villain2, type: mapping.villain2Action, text: actionText });
-      if (mapping.villain2Type) {
-        types[mapping.villain2] = mapping.villain2Type;
-      }
-    }
+      // Villain1 opens
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
 
-    // Add caller for squeeze scenarios
-    if (mapping.caller) {
-      actions.push({ position: mapping.caller, type: 'Call', text: 'Call' });
-      if (mapping.callerType) {
-        types[mapping.caller] = mapping.callerType;
-      }
+      // Folds from villain1 to villain2
+      addFolds(getPositionsBetween(mapping.villain, mapping.villain2));
+
+      // Villain2 3-bets
+      actions.push({ position: mapping.villain2, type: '3bet', text: '3-Bet 9BB' });
+
+      // Folds from villain2 to hero
+      addFolds(getPositionsBetween(mapping.villain2, heroPosition));
+
+      // Hero acts (decision point - not added)
     }
 
     return { actions, types };
   }, []);
 
   // Animate actions in sequence with "next to act" indicator
-  const animateActions = useCallback((actionsToAnimate, heroPosition) => {
+  const animateActions = useCallback((actionsToAnimate, heroPosition, animationId) => {
     const speeds = SPEED_SETTINGS[speed];
     setIsAnimating(true);
+
+    // Check if this animation is still current
+    const isCurrentAnimation = () => animationIdRef.current === animationId;
 
     if (actionsToAnimate.length === 0) {
       // No villain actions - show indicator on hero then unlock
       setNextToActPosition(heroPosition);
       setTimeout(() => {
+        if (!isCurrentAnimation()) return;
         setNextToActPosition(null);
         setIsAnimating(false);
         setShowHeroHighlight(true);
@@ -181,13 +297,25 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     let index = 0;
 
     const showNextIndicator = () => {
+      if (!isCurrentAnimation()) return; // Cancel if new animation started
+
       if (index < actionsToAnimate.length) {
-        // Show "next to act" indicator on the player about to act
         const nextAction = actionsToAnimate[index];
+
+        // Quick folds: skip pointing indicator, just show fold quickly
+        if (nextAction.isQuickFold) {
+          setCurrentActionIndex(index);
+          index++;
+          setTimeout(showNextIndicator, speeds.quickFold);
+          return;
+        }
+
+        // Show "next to act" indicator on the player about to act
         setNextToActPosition(nextAction.position);
 
         // After point delay, show the action
         setTimeout(() => {
+          if (!isCurrentAnimation()) return;
           setNextToActPosition(null);
           setCurrentActionIndex(index);
           const actionType = nextAction.type;
@@ -200,6 +328,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         // All villain actions done - show indicator on hero then unlock
         setNextToActPosition(heroPosition);
         setTimeout(() => {
+          if (!isCurrentAnimation()) return;
           setNextToActPosition(null);
           setIsAnimating(false);
           setShowHeroHighlight(true);
@@ -214,6 +343,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const nextHand = useCallback(() => {
     const scenario = getRandomScenario();
     if (!scenario) return;
+
+    // Increment animation ID to cancel any pending animations
+    animationIdRef.current += 1;
+    const currentAnimationId = animationIdRef.current;
 
     setCurrentScenario(scenario);
     // Use smart hand selection - ensures fold hands are near the range boundary
@@ -234,7 +367,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     // Start animation after a short delay
     const speeds = SPEED_SETTINGS[speed];
     setTimeout(() => {
-      animateActions(actionSequence, heroPosition);
+      // Only start animation if this is still the current animation
+      if (animationIdRef.current === currentAnimationId) {
+        animateActions(actionSequence, heroPosition, currentAnimationId);
+      }
     }, speeds.initial / 2);
   }, [getRandomScenario, buildActionSequence, animateActions, speed]);
 
@@ -250,27 +386,27 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     saveSettings({ speed, cardSize });
   }, [speed, cardSize]);
 
-  // Handle keyboard shortcuts
+  // Handle click outside to close panels
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (userAnswer !== null || isAnimating || !showHeroHighlight) return;
-
-      const key = e.key.toLowerCase();
-      const buttons = getActionButtons();
-
-      if (key === 'r' && buttons.some(b => b !== 'Fold' && b !== 'Call')) {
-        const raiseAction = buttons.find(b => b !== 'Fold' && b !== 'Call');
-        if (raiseAction) handleAnswer(raiseAction);
-      } else if (key === 'c' && buttons.includes('Call')) {
-        handleAnswer('Call');
-      } else if (key === 'f') {
-        handleAnswer('Fold');
+    const handleClickOutside = (e) => {
+      if (showHistory && historyPanelRef.current && !historyPanelRef.current.contains(e.target)) {
+        // Check if click was on the history button itself
+        if (!e.target.closest('.history-btn')) {
+          setShowHistory(false);
+          setSelectedHistoryIndex(null);
+        }
+      }
+      if (showSettings && settingsPanelRef.current && !settingsPanelRef.current.contains(e.target)) {
+        // Check if click was on the settings button itself
+        if (!e.target.closest('.settings-btn')) {
+          setShowSettings(false);
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [userAnswer, isAnimating, showHeroHighlight, currentScenario]); // eslint-disable-line react-hooks/exhaustive-deps
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showHistory, showSettings]);
 
   const handleAnswer = (answer) => {
     if (userAnswer !== null || isAnimating || !showHeroHighlight) return;
@@ -296,7 +432,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       userAnswer: answer,
       correctAnswer: correct,
       isCorrect,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      actions: [...actions] // Store the action sequence for hover display
     };
 
     // Record in session history (last 50 for display)
@@ -318,15 +455,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const getActionButtons = () => {
     if (!currentScenario) return [];
 
+    // Order: Fold (left), Call (middle if applicable), Raise/Bet (right)
     const category = currentScenario.category;
     if (category === 'open_ranges') {
-      return ['Raise', 'Fold'];
+      return ['Fold', 'Raise'];
     } else if (category === 'vs_open_ranges') {
-      return ['3bet', 'Call', 'Fold'];
+      return ['Fold', 'Call', '3bet'];
     } else if (category === 'vs_3bet_ranges' || category === 'cold_4bet_ranges') {
-      return ['4bet', 'Call', 'Fold'];
+      return ['Fold', 'Call', '4bet'];
     } else if (category === 'vs_4bet_ranges') {
-      return ['5bet', 'Call', 'Fold'];
+      return ['Fold', 'Call', '5bet'];
     }
     return [];
   };
@@ -358,20 +496,14 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
 
   const getButtonLabel = (action) => {
     const labels = {
-      'Raise': 'Raise (R)',
-      '3bet': '3-Bet (R)',
-      '4bet': '4-Bet (R)',
-      '5bet': '5-Bet (R)',
-      'Call': 'Call (C)',
-      'Fold': 'Fold (F)'
+      'Raise': 'Raise',
+      '3bet': '3-Bet',
+      '4bet': '4-Bet',
+      '5bet': '5-Bet',
+      'Call': 'Call',
+      'Fold': 'Fold'
     };
     return labels[action] || action;
-  };
-
-  const getShortcut = (action) => {
-    if (action === 'Call') return 'C';
-    if (action === 'Fold') return 'F';
-    return 'R';
   };
 
   const percentage = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
@@ -448,10 +580,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="settings-panel">
+        <div className="settings-panel" ref={settingsPanelRef}>
           <div className="settings-panel-header">
             <h3>Settings</h3>
-            <button className="close-btn" onClick={() => setShowSettings(false)}>×</button>
           </div>
           <div className="setting-group">
             <label className="setting-label">Speed</label>
@@ -489,65 +620,137 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
 
       {/* Hand History Panel */}
       {showHistory && (
-        <div className="history-panel">
+        <div className="history-panel" ref={historyPanelRef}>
           <div className="history-panel-header">
-            <h3>Hand History</h3>
-            <button className="close-btn" onClick={() => setShowHistory(false)}>×</button>
+            {selectedHistoryIndex !== null ? (
+              <>
+                <button
+                  className="back-arrow-btn"
+                  onClick={() => setSelectedHistoryIndex(null)}
+                  title="Back to Recent Hands"
+                >
+                  ←
+                </button>
+                <h3>Hand Details</h3>
+              </>
+            ) : (
+              <h3>Hand History</h3>
+            )}
           </div>
-          {/* All-time stats from persistent history */}
-          {persistentHistory.length > 0 && (
-            <div className="history-stats">
-              <div className="stat-item">
-                <span className="stat-value">{persistentHistory.length}</span>
-                <span className="stat-label">Total Hands</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value correct">
-                  {persistentHistory.filter(h => h.isCorrect).length}
-                </span>
-                <span className="stat-label">Correct</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value incorrect">
-                  {persistentHistory.filter(h => !h.isCorrect).length}
-                </span>
-                <span className="stat-label">Mistakes</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">
-                  {Math.round((persistentHistory.filter(h => h.isCorrect).length / persistentHistory.length) * 100)}%
-                </span>
-                <span className="stat-label">Accuracy</span>
-              </div>
-            </div>
-          )}
-          <div className="history-section-label">Recent Hands</div>
-          {handHistory.length === 0 ? (
-            <div className="history-empty">No hands played yet this session</div>
-          ) : (
-            <div className="history-list">
-              {handHistory.map((item, index) => (
-                <div key={index} className={`history-item ${item.isCorrect ? 'correct' : 'incorrect'}`}>
-                  <div className="history-hand">
-                    <HandDisplay hand={item.hand} size="mini" />
-                  </div>
-                  <div className="history-details">
-                    <span className="history-scenario">{item.scenario}</span>
-                    <div className="history-answers">
-                      <span className={`history-user-answer ${item.isCorrect ? 'correct' : 'incorrect'}`}>
-                        {item.userAnswer}
+
+          {selectedHistoryIndex !== null ? (
+            // Detail view for selected hand
+            <div className="history-detail-view">
+              {(() => {
+                const item = handHistory[selectedHistoryIndex];
+                if (!item) return null;
+                return (
+                  <>
+                    <div className="detail-hand-info">
+                      <div className="detail-hand-display">
+                        <HandDisplay hand={item.hand} size="small" />
+                      </div>
+                      <div className="detail-scenario">{item.scenario}</div>
+                      <div className="detail-hero-position">You were: {item.heroPosition}</div>
+                    </div>
+
+                    <div className="detail-result-summary">
+                      <span className={`detail-your-answer ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                        Your answer: {item.userAnswer}
                       </span>
                       {!item.isCorrect && (
-                        <span className="history-correct-answer">→ {item.correctAnswer}</span>
+                        <span className="detail-correct-answer">
+                          Correct: {item.correctAnswer}
+                        </span>
                       )}
                     </div>
-                  </div>
-                  <span className={`history-result ${item.isCorrect ? 'correct' : 'incorrect'}`}>
-                    {item.isCorrect ? '✓' : '✗'}
-                  </span>
-                </div>
-              ))}
+
+                    <div className="detail-actions-header">Action Sequence</div>
+                    <div className="detail-actions-list">
+                      {item.actions && item.actions.map((action, actionIdx) => (
+                        <div
+                          key={actionIdx}
+                          className={`detail-action-item ${action.isHeroAction ? 'hero-action' : ''} ${action.type.toLowerCase()}`}
+                        >
+                          <span className="detail-action-position">{action.position}</span>
+                          <span className="detail-action-text">{action.text || action.type}</span>
+                        </div>
+                      ))}
+                      <div className={`detail-action-item hero-action hero-decision ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                        <span className="detail-action-position">{item.heroPosition}</span>
+                        <span className="detail-action-text">
+                          {item.userAnswer}
+                          {!item.isCorrect && <span className="should-be"> (should: {item.correctAnswer})</span>}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
+          ) : (
+            // Recent hands list view
+            <>
+              {/* All-time stats from persistent history */}
+              {persistentHistory.length > 0 && (
+                <div className="history-stats">
+                  <div className="stat-item">
+                    <span className="stat-value">{persistentHistory.length}</span>
+                    <span className="stat-label">Total Hands</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value correct">
+                      {persistentHistory.filter(h => h.isCorrect).length}
+                    </span>
+                    <span className="stat-label">Correct</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value incorrect">
+                      {persistentHistory.filter(h => !h.isCorrect).length}
+                    </span>
+                    <span className="stat-label">Mistakes</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">
+                      {Math.round((persistentHistory.filter(h => h.isCorrect).length / persistentHistory.length) * 100)}%
+                    </span>
+                    <span className="stat-label">Accuracy</span>
+                  </div>
+                </div>
+              )}
+              <div className="history-section-label">Recent Hands</div>
+              {handHistory.length === 0 ? (
+                <div className="history-empty">No hands played yet this session</div>
+              ) : (
+                <div className="history-list">
+                  {handHistory.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`history-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
+                      onClick={() => setSelectedHistoryIndex(index)}
+                    >
+                      <div className="history-hand">
+                        <HandDisplay hand={item.hand} size="mini" />
+                      </div>
+                      <div className="history-details">
+                        <span className="history-scenario">{item.scenario}</span>
+                        <div className="history-answers">
+                          <span className={`history-user-answer ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                            {item.userAnswer}
+                          </span>
+                          {!item.isCorrect && (
+                            <span className="history-correct-answer">→ {item.correctAnswer}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`history-result ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                        {item.isCorrect ? '✓' : '✗'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -579,8 +782,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
             onClick={() => handleAnswer(action)}
             disabled={userAnswer !== null || isAnimating || !showHeroHighlight}
           >
-            <span className="btn-label">{action}</span>
-            <span className="btn-shortcut">{getShortcut(action)}</span>
+            <span className="btn-label">{getButtonLabel(action)}</span>
           </button>
         ))}
       </div>

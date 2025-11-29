@@ -1,5 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Settings.css';
+
+// localStorage key for selections
+const SELECTIONS_STORAGE_KEY = 'poker-trainer-selections';
+
+// Load saved selections from localStorage
+const loadSavedSelections = () => {
+  try {
+    const stored = localStorage.getItem(SELECTIONS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        positions: new Set(parsed.positions || ['BTN', 'BB']),
+        situations: new Set(parsed.situations || ['open', 'vs_open']),
+        blindsIndex: parsed.blindsIndex ?? 2
+      };
+    }
+  } catch (e) {
+    console.error('Failed to load selections from localStorage:', e);
+  }
+  return null;
+};
+
+// Save selections to localStorage
+const saveSelections = (positions, situations, blindsIndex) => {
+  try {
+    localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify({
+      positions: Array.from(positions),
+      situations: Array.from(situations),
+      blindsIndex
+    }));
+  } catch (e) {
+    console.error('Failed to save selections to localStorage:', e);
+  }
+};
 
 const POSITIONS = [
   { key: 'EP', label: 'EP (Early Position)' },
@@ -43,7 +77,7 @@ export const SCENARIO_MAPPINGS = {
   bb_vs_passive_open: { positions: ['BB'], situation: 'vs_open', label: 'BB vs Passive Open', category: 'vs_open_ranges', villain: 'BTN', villainAction: 'open', villainType: 'passive' },
   bb_vs_aggro_open: { positions: ['BB'], situation: 'vs_open', label: 'BB vs Aggro Open', category: 'vs_open_ranges', villain: 'BTN', villainAction: 'open', villainType: 'aggro' },
   btn_squeeze: { positions: ['BTN'], situation: 'vs_open', label: 'BTN Squeeze', category: 'vs_open_ranges', villain: 'HJ', villainAction: 'open', villainType: 'reg', caller: 'CO', callerType: 'fish' },
-  ep_vs_pro_open: { positions: ['EP'], situation: 'vs_open', label: 'EP vs Pro Open', category: 'vs_open_ranges', villain: 'UTG', villainAction: 'open', villainType: 'pro' },
+  ep_vs_pro_open: { positions: ['HJ'], situation: 'vs_open', label: 'HJ vs UTG Pro Open', category: 'vs_open_ranges', villain: 'UTG', villainAction: 'open', villainType: 'pro' },
   btn_vs_co_pro_open: { positions: ['BTN'], situation: 'vs_open', label: 'BTN vs CO Pro Open', category: 'vs_open_ranges', villain: 'CO', villainAction: 'open', villainType: 'pro' },
 
   // Vs 3bet Ranges
@@ -56,15 +90,29 @@ export const SCENARIO_MAPPINGS = {
   cold_4bet_vs_tight: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
   cold_4bet_vs_aggro: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
 
-  // Vs 4bet Ranges
-  vs_passive_4bet: { positions: ['EP', 'HJ', 'CO'], situation: 'vs_4bet', label: 'Vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BB', villainAction: '4bet', villainType: 'passive' },
-  vs_aggro_4bet: { positions: ['EP', 'HJ', 'CO', 'BTN'], situation: 'vs_4bet', label: 'Vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BB', villainAction: '4bet', villainType: 'aggro' }
+  // Vs 4bet Ranges - hero 3-bet from blinds/late, villain opened then 4-bets
+  vs_passive_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'Vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'passive' },
+  vs_aggro_4bet: { positions: ['BB', 'SB', 'CO'], situation: 'vs_4bet', label: 'Vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' }
 };
 
 export default function Settings({ onStartTraining }) {
-  const [selectedPositions, setSelectedPositions] = useState(new Set(['BTN', 'BB']));
-  const [selectedSituations, setSelectedSituations] = useState(new Set(['open', 'vs_open']));
-  const [selectedBlinds, setSelectedBlinds] = useState(BLIND_OPTIONS[2]); // Default $5/$5
+  // Initialize state from localStorage or defaults
+  const savedSelections = loadSavedSelections();
+  const [selectedPositions, setSelectedPositions] = useState(
+    savedSelections?.positions || new Set(['BTN', 'BB'])
+  );
+  const [selectedSituations, setSelectedSituations] = useState(
+    savedSelections?.situations || new Set(['open', 'vs_open'])
+  );
+  const [selectedBlindsIndex, setSelectedBlindsIndex] = useState(
+    savedSelections?.blindsIndex ?? 2
+  );
+  const selectedBlinds = BLIND_OPTIONS[selectedBlindsIndex];
+
+  // Save selections to localStorage whenever they change
+  useEffect(() => {
+    saveSelections(selectedPositions, selectedSituations, selectedBlindsIndex);
+  }, [selectedPositions, selectedSituations, selectedBlindsIndex]);
 
   const togglePosition = (pos) => {
     const newSet = new Set(selectedPositions);
@@ -177,8 +225,8 @@ export default function Settings({ onStartTraining }) {
           {BLIND_OPTIONS.map((blind, index) => (
             <button
               key={index}
-              className={`blind-button ${selectedBlinds === blind ? 'selected' : ''}`}
-              onClick={() => setSelectedBlinds(blind)}
+              className={`blind-button ${selectedBlindsIndex === index ? 'selected' : ''}`}
+              onClick={() => setSelectedBlindsIndex(index)}
             >
               {blind.label}
             </button>
