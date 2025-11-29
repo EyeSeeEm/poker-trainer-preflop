@@ -12,10 +12,10 @@
 }
 
 .card {
-  width: 90px;
-  height: 126px;
+  width: 108px;
+  height: 151px;
   background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow:
     0 4px 15px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -24,7 +24,7 @@
 }
 
 .card-overlap {
-  margin-left: -30px;
+  margin-left: -35px;
   transform: rotate(5deg);
 }
 
@@ -69,12 +69,12 @@
 }
 
 .corner-rank {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
 }
 
 .corner-suit {
-  font-size: 14px;
+  font-size: 17px;
   margin-top: -2px;
 }
 
@@ -86,7 +86,7 @@
 }
 
 .center-suit {
-  font-size: 42px;
+  font-size: 50px;
 }
 
 /* Colors */
@@ -133,27 +133,117 @@
   border: 1px solid rgba(231, 76, 60, 0.3);
 }
 
+/* Size variants */
+.size-small .card {
+  width: 80px;
+  height: 112px;
+  border-radius: 6px;
+}
+
+.size-small .card-overlap {
+  margin-left: -25px;
+}
+
+.size-small .corner-rank {
+  font-size: 16px;
+}
+
+.size-small .corner-suit {
+  font-size: 12px;
+}
+
+.size-small .center-suit {
+  font-size: 36px;
+}
+
+.size-small .hand-label {
+  font-size: 20px;
+}
+
+/* Medium is the default - no changes needed */
+
+.size-large .card {
+  width: 140px;
+  height: 196px;
+  border-radius: 12px;
+}
+
+.size-large .card-overlap {
+  margin-left: -45px;
+}
+
+.size-large .corner-rank {
+  font-size: 28px;
+}
+
+.size-large .corner-suit {
+  font-size: 22px;
+}
+
+.size-large .center-suit {
+  font-size: 65px;
+}
+
+.size-large .hand-label {
+  font-size: 28px;
+}
+
+/* Mini size for history */
+.size-mini .card {
+  width: 36px;
+  height: 50px;
+  border-radius: 4px;
+}
+
+.size-mini .card-overlap {
+  margin-left: -12px;
+}
+
+.size-mini .card-inner {
+  padding: 2px;
+}
+
+.size-mini .corner-rank {
+  font-size: 10px;
+}
+
+.size-mini .corner-suit {
+  font-size: 8px;
+}
+
+.size-mini .center-suit {
+  display: none;
+}
+
+.size-mini .card-corner.bottom-right {
+  display: none;
+}
+
+.size-mini .hand-label {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .card {
-    width: 70px;
-    height: 98px;
+    width: 85px;
+    height: 119px;
   }
 
   .card-overlap {
-    margin-left: -25px;
+    margin-left: -28px;
   }
 
   .corner-rank {
-    font-size: 14px;
+    font-size: 18px;
   }
 
   .corner-suit {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .center-suit {
-    font-size: 32px;
+    font-size: 40px;
   }
 
   .hand-label {

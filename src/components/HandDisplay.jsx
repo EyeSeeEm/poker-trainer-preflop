@@ -1,7 +1,7 @@
 import React from 'react';
 import './HandDisplay.css';
 
-export default function HandDisplay({ hand }) {
+export default function HandDisplay({ hand, size = 'medium' }) {
   const formatHand = (hand) => {
     if (!hand) return [];
 
@@ -27,7 +27,7 @@ export default function HandDisplay({ hand }) {
   const isPair = hand && hand.length === 2;
 
   return (
-    <div className="hand-display">
+    <div className={`hand-display size-${size}`}>
       <div className="cards-container">
         {cards.map((card, index) => (
           <div key={index} className={`card ${index === 1 ? 'card-overlap' : ''}`}>

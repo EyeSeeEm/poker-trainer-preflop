@@ -13,6 +13,9 @@ const SPEED_SETTINGS = {
   faster: { fold: 100, call: 150, raise: 250, initial: 150, feedback: 700 }
 };
 
+// Card size options
+const CARD_SIZES = ['small', 'medium', 'large'];
+
 export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [currentHand, setCurrentHand] = useState('');
@@ -26,6 +29,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [showHeroHighlight, setShowHeroHighlight] = useState(false);
   const [speed, setSpeed] = useState('normal');
   const [playerTypes, setPlayerTypes] = useState({});
+  const [cardSize, setCardSize] = useState('medium');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [handHistory, setHandHistory] = useState([]);
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -184,6 +191,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     }));
     setStreak(prev => isCorrect ? prev + 1 : 0);
 
+    // Record hand in history
+    setHandHistory(prev => [{
+      hand: currentHand,
+      scenario: currentScenario.label,
+      userAnswer: answer,
+      correctAnswer: correct,
+      isCorrect,
+      timestamp: Date.now()
+    }, ...prev].slice(0, 50)); // Keep last 50 hands
+
     // Auto-advance after delay based on speed
     const speeds = SPEED_SETTINGS[speed];
     const feedbackTime = isCorrect ? speeds.feedback * 0.6 : speeds.feedback;
@@ -296,22 +313,22 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         <button className="back-btn" onClick={onBack}>
           ← Back
         </button>
-        <div className="speed-control">
-          <span className="speed-label">Speed:</span>
-          <div className="speed-buttons">
-            <button
-              className={`speed-btn ${speed === 'normal' ? 'active' : ''}`}
-              onClick={() => setSpeed('normal')}
-            >1x</button>
-            <button
-              className={`speed-btn ${speed === 'fast' ? 'active' : ''}`}
-              onClick={() => setSpeed('fast')}
-            >2x</button>
-            <button
-              className={`speed-btn ${speed === 'faster' ? 'active' : ''}`}
-              onClick={() => setSpeed('faster')}
-            >3x</button>
-          </div>
+        <div className="header-actions">
+          <button
+            className={`history-btn ${handHistory.length > 0 ? 'has-history' : ''}`}
+            onClick={() => setShowHistory(!showHistory)}
+            title="Hand History"
+          >
+            <span className="history-icon">📋</span>
+            {handHistory.length > 0 && <span className="history-count">{handHistory.length}</span>}
+          </button>
+          <button
+            className="settings-btn"
+            onClick={() => setShowSettings(!showSettings)}
+            title="Settings"
+          >
+            <span className="hamburger-icon">☰</span>
+          </button>
         </div>
         <div className="score-display">
           <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
@@ -320,6 +337,84 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
           </span>
         </div>
       </div>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="settings-panel">
+          <div className="settings-panel-header">
+            <h3>Settings</h3>
+            <button className="close-btn" onClick={() => setShowSettings(false)}>×</button>
+          </div>
+          <div className="setting-group">
+            <label className="setting-label">Speed</label>
+            <div className="speed-buttons">
+              <button
+                className={`speed-btn ${speed === 'normal' ? 'active' : ''}`}
+                onClick={() => setSpeed('normal')}
+              >1x</button>
+              <button
+                className={`speed-btn ${speed === 'fast' ? 'active' : ''}`}
+                onClick={() => setSpeed('fast')}
+              >2x</button>
+              <button
+                className={`speed-btn ${speed === 'faster' ? 'active' : ''}`}
+                onClick={() => setSpeed('faster')}
+              >3x</button>
+            </div>
+          </div>
+          <div className="setting-group">
+            <label className="setting-label">Card Size</label>
+            <div className="size-buttons">
+              {CARD_SIZES.map(size => (
+                <button
+                  key={size}
+                  className={`size-btn ${cardSize === size ? 'active' : ''}`}
+                  onClick={() => setCardSize(size)}
+                >
+                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hand History Panel */}
+      {showHistory && (
+        <div className="history-panel">
+          <div className="history-panel-header">
+            <h3>Hand History</h3>
+            <button className="close-btn" onClick={() => setShowHistory(false)}>×</button>
+          </div>
+          {handHistory.length === 0 ? (
+            <div className="history-empty">No hands played yet</div>
+          ) : (
+            <div className="history-list">
+              {handHistory.map((item, index) => (
+                <div key={index} className={`history-item ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                  <div className="history-hand">
+                    <HandDisplay hand={item.hand} size="mini" />
+                  </div>
+                  <div className="history-details">
+                    <span className="history-scenario">{item.scenario}</span>
+                    <div className="history-answers">
+                      <span className={`history-user-answer ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                        {item.userAnswer}
+                      </span>
+                      {!item.isCorrect && (
+                        <span className="history-correct-answer">→ {item.correctAnswer}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`history-result ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                    {item.isCorrect ? '✓' : '✗'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="scenario-label">{currentScenario.label}</div>
 
@@ -337,7 +432,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         {getSituationDescription()}
       </div>
 
-      <HandDisplay hand={currentHand} />
+      <HandDisplay hand={currentHand} size={cardSize} />
 
       <div className="action-buttons">
         {getActionButtons().map(action => (
