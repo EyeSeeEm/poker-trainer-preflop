@@ -8,13 +8,38 @@ import './Quiz.css';
 
 // Speed settings - added 'point' for dealer pointing at next player
 const SPEED_SETTINGS = {
-  normal: { fold: 400, call: 600, raise: 900, initial: 600, feedback: 2000, point: 500 },
-  fast: { fold: 200, call: 350, raise: 500, initial: 350, feedback: 1200, point: 300 },
-  faster: { fold: 100, call: 150, raise: 250, initial: 150, feedback: 700, point: 150 }
+  normal: { fold: 400, call: 600, raise: 900, initial: 100, feedback: 2000, point: 500 },
+  fast: { fold: 200, call: 350, raise: 500, initial: 100, feedback: 1200, point: 300 },
+  faster: { fold: 100, call: 150, raise: 250, initial: 100, feedback: 700, point: 150 }
 };
+
+// localStorage key for persistent history
+const HISTORY_STORAGE_KEY = 'poker-trainer-history';
 
 // Card size options
 const CARD_SIZES = ['small', 'medium', 'large'];
+
+// Load persistent history from localStorage
+const loadPersistentHistory = () => {
+  try {
+    const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load history from localStorage:', e);
+  }
+  return [];
+};
+
+// Save history to localStorage
+const savePersistentHistory = (history) => {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  } catch (e) {
+    console.error('Failed to save history to localStorage:', e);
+  }
+};
 
 export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
@@ -32,8 +57,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [cardSize, setCardSize] = useState('medium');
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [handHistory, setHandHistory] = useState([]);
+  const [handHistory, setHandHistory] = useState([]); // Session history (recent 50 for display)
   const [nextToActPosition, setNextToActPosition] = useState(null);
+  const [persistentHistory, setPersistentHistory] = useState(() => loadPersistentHistory());
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -215,15 +241,28 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     }));
     setStreak(prev => isCorrect ? prev + 1 : 0);
 
-    // Record hand in history
-    setHandHistory(prev => [{
+    // Create history entry with full details for analysis
+    const historyEntry = {
       hand: currentHand,
       scenario: currentScenario.label,
+      scenarioKey: currentScenario.key,
+      category: currentScenario.category,
+      heroPosition: currentScenario.positions[0],
       userAnswer: answer,
       correctAnswer: correct,
       isCorrect,
       timestamp: Date.now()
-    }, ...prev].slice(0, 50)); // Keep last 50 hands
+    };
+
+    // Record in session history (last 50 for display)
+    setHandHistory(prev => [historyEntry, ...prev].slice(0, 50));
+
+    // Save to persistent history (all entries)
+    setPersistentHistory(prev => {
+      const newHistory = [historyEntry, ...prev];
+      savePersistentHistory(newHistory);
+      return newHistory;
+    });
 
     // Auto-advance after delay based on speed
     const speeds = SPEED_SETTINGS[speed];
@@ -410,8 +449,36 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
             <h3>Hand History</h3>
             <button className="close-btn" onClick={() => setShowHistory(false)}>×</button>
           </div>
+          {/* All-time stats from persistent history */}
+          {persistentHistory.length > 0 && (
+            <div className="history-stats">
+              <div className="stat-item">
+                <span className="stat-value">{persistentHistory.length}</span>
+                <span className="stat-label">Total Hands</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value correct">
+                  {persistentHistory.filter(h => h.isCorrect).length}
+                </span>
+                <span className="stat-label">Correct</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value incorrect">
+                  {persistentHistory.filter(h => !h.isCorrect).length}
+                </span>
+                <span className="stat-label">Mistakes</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {Math.round((persistentHistory.filter(h => h.isCorrect).length / persistentHistory.length) * 100)}%
+                </span>
+                <span className="stat-label">Accuracy</span>
+              </div>
+            </div>
+          )}
+          <div className="history-section-label">Recent Hands</div>
           {handHistory.length === 0 ? (
-            <div className="history-empty">No hands played yet</div>
+            <div className="history-empty">No hands played yet this session</div>
           ) : (
             <div className="history-list">
               {handHistory.map((item, index) => (
