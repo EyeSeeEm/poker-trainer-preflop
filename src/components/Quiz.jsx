@@ -189,7 +189,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
 
       // For squeeze: there's a caller between villain and hero
       if (mapping.caller) {
@@ -213,7 +213,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(heroPosition));
 
       // Hero opens
-      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
+      actions.push({ position: heroPosition, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)`, isHeroAction: true });
 
       // Folds from hero to villain - show with pointer since they happen after hero's open
       const positionsBetween = getPositionsBetween(heroPosition, mapping.villain);
@@ -222,7 +222,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       });
 
       // Villain 3-bets
-      actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet 9BB' });
+      actions.push({ position: mapping.villain, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)` });
 
       // Hero acts (decision point - not added)
     }
@@ -235,7 +235,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
 
       // Important folds from villain to hero - these should show with pointer indicator
       // to help user understand the action flow
@@ -246,10 +246,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       });
 
       // Hero 3-bets
-      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet 9BB', isHeroAction: true });
+      actions.push({ position: heroPosition, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)`, isHeroAction: true });
 
       // Villain 4-bets (action goes directly back to original raiser)
-      actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet 22BB' });
+      actions.push({ position: mapping.villain, type: '4bet', text: `4-Bet $${(blinds.bb * 22).toFixed(0)} (22BB)` });
 
       // Hero acts (decision point - not added)
     }
@@ -260,13 +260,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain1 opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
 
       // Folds from villain1 to villain2
       addFolds(getPositionsBetween(mapping.villain, mapping.villain2));
 
       // Villain2 3-bets
-      actions.push({ position: mapping.villain2, type: '3bet', text: '3-Bet 9BB' });
+      actions.push({ position: mapping.villain2, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)` });
 
       // Folds from villain2 to hero
       addFolds(getPositionsBetween(mapping.villain2, heroPosition));
@@ -275,7 +275,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     }
 
     return { actions, types };
-  }, []);
+  }, [blinds.bb]);
 
   // Animate actions in sequence with "next to act" indicator
   const animateActions = useCallback((actionsToAnimate, heroPosition, animationId) => {
@@ -550,20 +550,36 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const generatePlaintextHH = (item) => {
     if (!item) return '';
 
+    const bb = blinds.bb;
     const lines = [];
 
     // Header
     lines.push(`Scenario: ${item.scenario}`);
+    lines.push(`Blinds: $${blinds.sb}/$${blinds.bb}`);
     lines.push(`Hero: ${item.heroPosition} with ${item.hand}`);
     lines.push('');
     lines.push('--- Preflop ---');
 
-    // Actions
+    // Actions with dollar amounts
     if (item.actions) {
       item.actions.forEach(action => {
-        const actionText = action.text || action.type;
         const pType = item.playerTypes?.[action.position];
         const typeStr = pType ? ` (${pType})` : '';
+
+        // Convert action to include dollar amount
+        let actionText = action.text || action.type;
+        if (action.type === 'Raise' || action.type === 'open') {
+          actionText = `Raise to $${(bb * 2.5).toFixed(1)} (2.5BB)`;
+        } else if (action.type === '3bet') {
+          actionText = `3-Bet to $${(bb * 9).toFixed(0)} (9BB)`;
+        } else if (action.type === '4bet') {
+          actionText = `4-Bet to $${(bb * 22).toFixed(0)} (22BB)`;
+        } else if (action.type === 'Call') {
+          actionText = 'Call';
+        } else if (action.type === 'Limp') {
+          actionText = `Limp $${bb} (1BB)`;
+        }
+
         lines.push(`${action.position}${typeStr}: ${actionText}`);
       });
     }
