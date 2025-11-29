@@ -585,15 +585,15 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               <button
                 className={`speed-btn ${speed === 'normal' ? 'active' : ''}`}
                 onClick={() => setSpeed('normal')}
-              >1x</button>
+              >Normal</button>
               <button
                 className={`speed-btn ${speed === 'fast' ? 'active' : ''}`}
                 onClick={() => setSpeed('fast')}
-              >2x</button>
+              >Fast</button>
               <button
                 className={`speed-btn ${speed === 'faster' ? 'active' : ''}`}
                 onClick={() => setSpeed('faster')}
-              >3x</button>
+              >Faster</button>
             </div>
           </div>
           <div className="setting-group">
