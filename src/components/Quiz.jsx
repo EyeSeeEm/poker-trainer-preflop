@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import HandDisplay from './HandDisplay';
 import PokerTable from './PokerTable';
 import { getSmartRandomHand } from '../utils/smartHandSelection';
-import { getCorrectAction } from '../utils/rangeLogic';
+import { getCorrectAction, isAnswerCorrect, getCorrectActionDisplay } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
@@ -189,7 +189,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
 
       // For squeeze: there's a caller between villain and hero
       if (mapping.caller) {
@@ -213,7 +213,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(heroPosition));
 
       // Hero opens
-      actions.push({ position: heroPosition, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)`, isHeroAction: true });
+      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
 
       // Folds from hero to villain - show with pointer since they happen after hero's open
       const positionsBetween = getPositionsBetween(heroPosition, mapping.villain);
@@ -222,7 +222,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       });
 
       // Villain 3-bets
-      actions.push({ position: mapping.villain, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)` });
+      actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet 9BB' });
 
       // Hero acts (decision point - not added)
     }
@@ -235,7 +235,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
 
       // Important folds from villain to hero - these should show with pointer indicator
       // to help user understand the action flow
@@ -246,10 +246,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       });
 
       // Hero 3-bets
-      actions.push({ position: heroPosition, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)`, isHeroAction: true });
+      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet 9BB', isHeroAction: true });
 
       // Villain 4-bets (action goes directly back to original raiser)
-      actions.push({ position: mapping.villain, type: '4bet', text: `4-Bet $${(blinds.bb * 22).toFixed(0)} (22BB)` });
+      actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet 22BB' });
 
       // Hero acts (decision point - not added)
     }
@@ -260,13 +260,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       addFolds(getPositionsBefore(mapping.villain));
 
       // Villain1 opens
-      actions.push({ position: mapping.villain, type: 'Raise', text: `Raise $${(blinds.bb * 2.5).toFixed(1)} (2.5BB)` });
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
 
       // Folds from villain1 to villain2
       addFolds(getPositionsBetween(mapping.villain, mapping.villain2));
 
       // Villain2 3-bets
-      actions.push({ position: mapping.villain2, type: '3bet', text: `3-Bet $${(blinds.bb * 9).toFixed(0)} (9BB)` });
+      actions.push({ position: mapping.villain2, type: '3bet', text: '3-Bet 9BB' });
 
       // Folds from villain2 to hero
       addFolds(getPositionsBetween(mapping.villain2, heroPosition));
@@ -275,7 +275,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     }
 
     return { actions, types };
-  }, [blinds.bb]);
+  }, []);
 
   // Animate actions in sequence with "next to act" indicator
   const animateActions = useCallback((actionsToAnimate, heroPosition, animationId) => {
@@ -414,11 +414,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const handleAnswer = (answer) => {
     if (userAnswer !== null || isAnimating || !showHeroHighlight) return;
 
-    const correct = getCorrectAction(currentHand, currentScenario.category, currentScenario.key);
-    setCorrectAnswer(correct);
+    // Use new API that handles mixed actions
+    const isCorrect = isAnswerCorrect(answer, currentHand, currentScenario.category, currentScenario.key);
+    const correctDisplay = getCorrectActionDisplay(currentHand, currentScenario.category, currentScenario.key);
+
+    setCorrectAnswer(correctDisplay);
     setUserAnswer(answer);
 
-    const isCorrect = answer === correct;
     setScore(prev => ({
       correct: prev.correct + (isCorrect ? 1 : 0),
       total: prev.total + 1
@@ -432,7 +434,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       category: currentScenario.category,
       heroPosition: currentScenario.positions[0],
       userAnswer: answer,
-      correctAnswer: correct,
+      correctAnswer: correctDisplay,
       isCorrect,
       timestamp: Date.now(),
       actions: [...actions], // Store the action sequence for hover display
@@ -488,10 +490,14 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     if (userAnswer === null) {
       return base;
     }
-    if (action === correctAnswer) {
+
+    // correctAnswer may be "Call/3bet" for mixed hands, so check if action is part of it
+    const isCorrectAction = correctAnswer && correctAnswer.split('/').includes(action);
+
+    if (isCorrectAction) {
       return base + ' correct';
     }
-    if (action === userAnswer && action !== correctAnswer) {
+    if (action === userAnswer && !isCorrectAction) {
       return base + ' incorrect';
     }
     return base + ' disabled';
@@ -615,7 +621,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   }
 
   return (
-    <div className={`quiz ${userAnswer !== null ? (userAnswer === correctAnswer ? 'result-correct' : 'result-incorrect') : ''}`}>
+    <div className={`quiz ${userAnswer !== null ? (correctAnswer && correctAnswer.split('/').includes(userAnswer) ? 'result-correct' : 'result-incorrect') : ''}`}>
       <div className="quiz-header">
         <button className="back-btn" onClick={onBack}>
           ← Back
@@ -920,8 +926,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       </div>
 
       {userAnswer !== null && (
-        <div className={`feedback ${userAnswer === correctAnswer ? 'correct' : 'incorrect'}`}>
-          {userAnswer === correctAnswer ? (
+        <div className={`feedback ${correctAnswer && correctAnswer.split('/').includes(userAnswer) ? 'correct' : 'incorrect'}`}>
+          {correctAnswer && correctAnswer.split('/').includes(userAnswer) ? (
             <span>✓ Correct!</span>
           ) : (
             <span>✗ Wrong! Correct: <strong>{correctAnswer}</strong></span>
