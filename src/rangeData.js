@@ -76,15 +76,25 @@ export const rangeData = {
     }
   },
   vs_4bet_ranges: {
-    vs_passive_4bet: {
-      "5bet": ["AA", "AKo"],
-      call: ["AKs", "KK", "QQ", "JJ", "TT"],
-      mixed: ["AA", "AKo"]
+    // IP vs passive 4bet: "mixed" hands (AA, AKo) become calls when IP
+    ip_vs_passive_4bet: {
+      "5bet": [],
+      call: ["AA", "AKs", "AKo", "KK", "QQ", "JJ", "TT"]
     },
-    vs_aggro_4bet: {
+    // OOP vs passive 4bet: "mixed" hands fold, only pure 5bet/call remain
+    oop_vs_passive_4bet: {
+      "5bet": [],
+      call: ["AKs", "KK", "QQ", "JJ", "TT"]
+    },
+    // IP vs aggro 4bet: "mixed" hands (AKo, KK) become calls when IP
+    ip_vs_aggro_4bet: {
       "5bet": ["AA"],
-      call: ["AKs", "AQs", "AJs", "KK", "QQ", "JJ", "TT", "87s", "76s", "65s", "54s"],
-      mixed: ["AKo", "KK"]
+      call: ["AKs", "AKo", "AQs", "AJs", "KK", "QQ", "JJ", "TT", "87s", "76s", "65s", "54s"]
+    },
+    // OOP vs aggro 4bet: "mixed" hands fold
+    oop_vs_aggro_4bet: {
+      "5bet": ["AA"],
+      call: ["AKs", "AQs", "AJs", "QQ", "JJ", "TT", "87s", "76s", "65s", "54s"]
     }
   }
 };

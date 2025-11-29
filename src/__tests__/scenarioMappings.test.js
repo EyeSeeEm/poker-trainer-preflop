@@ -40,33 +40,23 @@ describe('Scenario Mappings - Position Logic', () => {
   });
 
   describe('vs_4bet scenarios', () => {
-    it('villain should open before hero can 3bet for vs_passive_4bet', () => {
-      const scenario = SCENARIO_MAPPINGS.vs_passive_4bet;
-      // In vs_4bet: Villain opens, hero 3-bets, villain 4-bets
-      // Villain must be able to open first
-      // Hero positions are BB/SB, villain is BTN - BTN acts before blinds
-      scenario.positions.forEach(heroPos => {
-        const heroIndex = getPositionIndex(heroPos);
-        const villainIndex = getPositionIndex(scenario.villain);
-        // Villain should act before hero (to open first)
-        expect(villainIndex).toBeLessThan(heroIndex);
-      });
+    it('OOP vs_4bet scenarios have hero in blinds', () => {
+      const scenario = SCENARIO_MAPPINGS.oop_vs_passive_4bet;
+      // In OOP vs_4bet: Hero is in blinds (BB/SB)
+      expect(scenario.positions).toContain('BB');
+      expect(scenario.positions).toContain('SB');
+      expect(scenario.villain).toBe('BTN');
     });
 
-    it('villain should open before hero can 3bet for vs_aggro_4bet', () => {
-      const scenario = SCENARIO_MAPPINGS.vs_aggro_4bet;
-      scenario.positions.forEach(heroPos => {
-        const heroIndex = getPositionIndex(heroPos);
-        const villainIndex = getPositionIndex(scenario.villain);
-        // Villain should act before hero (to open first), except for CO where they can squeeze
-        if (heroPos !== 'CO') {
-          expect(villainIndex).toBeLessThan(heroIndex);
-        }
-      });
+    it('IP vs_4bet scenarios have hero in CO', () => {
+      const scenario = SCENARIO_MAPPINGS.ip_vs_aggro_4bet;
+      // In IP vs_4bet: Hero is in CO, facing BTN 4bet
+      expect(scenario.positions).toContain('CO');
+      expect(scenario.villain).toBe('BTN');
     });
 
     it('vs_4bet action sequence makes positional sense', () => {
-      const scenario = SCENARIO_MAPPINGS.vs_aggro_4bet;
+      const scenario = SCENARIO_MAPPINGS.oop_vs_aggro_4bet;
       expect(scenario.villainAction).toBe('4bet');
       expect(scenario.category).toBe('vs_4bet_ranges');
       // Villain (BTN) opens, Hero (BB/SB) 3-bets, Villain 4-bets
@@ -250,7 +240,7 @@ describe('Action Sequence Building', () => {
   }
 
   it('vs_4bet builds correct action sequence: folds to villain, villain opens, folds, hero 3bets, villain 4bets', () => {
-    const scenario = SCENARIO_MAPPINGS.vs_aggro_4bet;
+    const scenario = SCENARIO_MAPPINGS.oop_vs_aggro_4bet;
     const actions = buildActionSequence(scenario);
 
     // Hero is BB, Villain is BTN

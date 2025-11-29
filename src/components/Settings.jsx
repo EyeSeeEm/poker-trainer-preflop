@@ -87,9 +87,13 @@ export const SCENARIO_MAPPINGS = {
   cold_4bet_vs_tight: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
   cold_4bet_vs_aggro: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
 
-  // Vs 4bet Ranges - hero 3-bet from blinds/late, villain opened then 4-bets
-  vs_passive_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'Vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'passive' },
-  vs_aggro_4bet: { positions: ['BB', 'SB', 'CO'], situation: 'vs_4bet', label: 'Vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' }
+  // Vs 4bet Ranges - split by IP/OOP since position-dependent hands call IP but fold OOP
+  // IP scenarios (CO vs BTN 4bet - hero opened from CO, BTN 3bet, hero re-raised, BTN 4bets)
+  ip_vs_passive_4bet: { positions: ['CO'], situation: 'vs_4bet', label: 'IP vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'passive' },
+  ip_vs_aggro_4bet: { positions: ['CO'], situation: 'vs_4bet', label: 'IP vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' },
+  // OOP scenarios (BB/SB vs BTN 4bet - hero 3bet from blinds, BTN 4bets)
+  oop_vs_passive_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'OOP vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'passive' },
+  oop_vs_aggro_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'OOP vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' }
 };
 
 // Fixed blinds - always 5/5

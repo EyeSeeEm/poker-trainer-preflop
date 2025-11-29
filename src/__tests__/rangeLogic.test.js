@@ -82,29 +82,58 @@ describe('Range Logic', () => {
   });
 
   describe('Vs 4bet Ranges', () => {
-    it('should return "5bet" for AA in Vs Passive 4bet (mixed)', () => {
-      const result = getCorrectAction('AA', 'vs_4bet_ranges', 'vs_passive_4bet');
-      expect(result.action).toBe('5bet');
-      expect(result.isMixed).toBe(true);
-    });
-
-    it('should return "Call" for KK in Vs Passive 4bet', () => {
-      const result = getCorrectAction('KK', 'vs_4bet_ranges', 'vs_passive_4bet');
+    // IP scenarios - position-dependent hands become calls
+    it('should return "Call" for AA in IP vs Passive 4bet', () => {
+      const result = getCorrectAction('AA', 'vs_4bet_ranges', 'ip_vs_passive_4bet');
       expect(result.action).toBe('Call');
     });
 
-    it('should return "Fold" for AQs in Vs Passive 4bet', () => {
-      const result = getCorrectAction('AQs', 'vs_4bet_ranges', 'vs_passive_4bet');
+    it('should return "Call" for AKo in IP vs Passive 4bet', () => {
+      const result = getCorrectAction('AKo', 'vs_4bet_ranges', 'ip_vs_passive_4bet');
+      expect(result.action).toBe('Call');
+    });
+
+    it('should return "Fold" for AQs in IP vs Passive 4bet', () => {
+      const result = getCorrectAction('AQs', 'vs_4bet_ranges', 'ip_vs_passive_4bet');
+      expect(result.action).toBe('Fold');
+    });
+
+    // OOP scenarios - position-dependent hands fold
+    it('should return "Call" for KK in OOP vs Passive 4bet', () => {
+      const result = getCorrectAction('KK', 'vs_4bet_ranges', 'oop_vs_passive_4bet');
+      expect(result.action).toBe('Call');
+    });
+
+    it('should return "Fold" for AA in OOP vs Passive 4bet (position-dependent)', () => {
+      // AA was "mixed" - folds OOP
+      const result = getCorrectAction('AA', 'vs_4bet_ranges', 'oop_vs_passive_4bet');
+      expect(result.action).toBe('Fold');
+    });
+
+    it('should return "5bet" for AA in IP vs Aggro 4bet', () => {
+      const result = getCorrectAction('AA', 'vs_4bet_ranges', 'ip_vs_aggro_4bet');
+      expect(result.action).toBe('5bet');
+    });
+
+    it('should return "Call" for AKo in IP vs Aggro 4bet (position-dependent)', () => {
+      // AKo was "mixed" - calls IP
+      const result = getCorrectAction('AKo', 'vs_4bet_ranges', 'ip_vs_aggro_4bet');
+      expect(result.action).toBe('Call');
+    });
+
+    it('should return "Fold" for AKo in OOP vs Aggro 4bet (position-dependent)', () => {
+      // AKo was "mixed" - folds OOP
+      const result = getCorrectAction('AKo', 'vs_4bet_ranges', 'oop_vs_aggro_4bet');
       expect(result.action).toBe('Fold');
     });
   });
 
   describe('isAnswerCorrect', () => {
-    it('should accept both actions for mixed hands', () => {
-      // AKo in vs_aggro_4bet is mixed between 5bet and Call
-      expect(isAnswerCorrect('5bet', 'AKo', 'vs_4bet_ranges', 'vs_aggro_4bet')).toBe(true);
-      expect(isAnswerCorrect('Call', 'AKo', 'vs_4bet_ranges', 'vs_aggro_4bet')).toBe(true);
-      expect(isAnswerCorrect('Fold', 'AKo', 'vs_4bet_ranges', 'vs_aggro_4bet')).toBe(false);
+    it('should accept both actions for mixed hands in vs_open scenarios', () => {
+      // A7s in btn_vs_aggro_open is mixed between Call and 3bet
+      expect(isAnswerCorrect('Call', 'A7s', 'vs_open_ranges', 'btn_vs_aggro_open')).toBe(true);
+      expect(isAnswerCorrect('3bet', 'A7s', 'vs_open_ranges', 'btn_vs_aggro_open')).toBe(true);
+      expect(isAnswerCorrect('Fold', 'A7s', 'vs_open_ranges', 'btn_vs_aggro_open')).toBe(false);
     });
 
     it('should only accept single action for non-mixed hands', () => {
