@@ -389,8 +389,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showHistory && historyPanelRef.current && !historyPanelRef.current.contains(e.target)) {
-        // Check if click was on the history button itself
-        if (!e.target.closest('.history-btn')) {
+        // Check if click was on the score-display button itself
+        if (!e.target.closest('.score-display')) {
           setShowHistory(false);
           setSelectedHistoryIndex(null);
         }
