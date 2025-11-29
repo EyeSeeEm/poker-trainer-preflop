@@ -6,11 +6,11 @@ import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
-// Speed settings
+// Speed settings - added 'point' for dealer pointing at next player
 const SPEED_SETTINGS = {
-  normal: { fold: 400, call: 600, raise: 900, initial: 600, feedback: 2000 },
-  fast: { fold: 200, call: 350, raise: 500, initial: 350, feedback: 1200 },
-  faster: { fold: 100, call: 150, raise: 250, initial: 150, feedback: 700 }
+  normal: { fold: 400, call: 600, raise: 900, initial: 600, feedback: 2000, point: 500 },
+  fast: { fold: 200, call: 350, raise: 500, initial: 350, feedback: 1200, point: 300 },
+  faster: { fold: 100, call: 150, raise: 250, initial: 150, feedback: 700, point: 150 }
 };
 
 // Card size options
@@ -33,6 +33,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [handHistory, setHandHistory] = useState([]);
+  const [nextToActPosition, setNextToActPosition] = useState(null);
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -95,33 +96,52 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     return { actions, types };
   }, []);
 
-  // Animate actions in sequence
-  const animateActions = useCallback((actionsToAnimate) => {
+  // Animate actions in sequence with "next to act" indicator
+  const animateActions = useCallback((actionsToAnimate, heroPosition) => {
+    const speeds = SPEED_SETTINGS[speed];
+    setIsAnimating(true);
+
     if (actionsToAnimate.length === 0) {
-      setIsAnimating(false);
-      setShowHeroHighlight(true);
+      // No villain actions - show indicator on hero then unlock
+      setNextToActPosition(heroPosition);
+      setTimeout(() => {
+        setNextToActPosition(null);
+        setIsAnimating(false);
+        setShowHeroHighlight(true);
+      }, speeds.point);
       return;
     }
 
-    const speeds = SPEED_SETTINGS[speed];
-    setIsAnimating(true);
     let index = 0;
 
-    const animateNext = () => {
+    const showNextIndicator = () => {
       if (index < actionsToAnimate.length) {
-        setCurrentActionIndex(index);
-        const actionType = actionsToAnimate[index].type;
-        const delay = (actionType === 'Fold' || actionType === 'Limp') ? speeds.fold :
-                      actionType === 'Call' ? speeds.call : speeds.raise;
-        index++;
-        setTimeout(animateNext, delay);
+        // Show "next to act" indicator on the player about to act
+        const nextAction = actionsToAnimate[index];
+        setNextToActPosition(nextAction.position);
+
+        // After point delay, show the action
+        setTimeout(() => {
+          setNextToActPosition(null);
+          setCurrentActionIndex(index);
+          const actionType = nextAction.type;
+          const delay = (actionType === 'Fold' || actionType === 'Limp') ? speeds.fold :
+                        actionType === 'Call' ? speeds.call : speeds.raise;
+          index++;
+          setTimeout(showNextIndicator, delay);
+        }, speeds.point);
       } else {
-        setIsAnimating(false);
-        setShowHeroHighlight(true);
+        // All villain actions done - show indicator on hero then unlock
+        setNextToActPosition(heroPosition);
+        setTimeout(() => {
+          setNextToActPosition(null);
+          setIsAnimating(false);
+          setShowHeroHighlight(true);
+        }, speeds.point);
       }
     };
 
-    setTimeout(animateNext, speeds.initial);
+    setTimeout(showNextIndicator, speeds.initial);
   }, [speed]);
 
   // Start a new hand
@@ -136,15 +156,19 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     setCorrectAnswer(null);
     setCurrentActionIndex(-1);
     setShowHeroHighlight(false);
+    setNextToActPosition(null);
 
     const { actions: actionSequence, types } = buildActionSequence(scenario);
     setActions(actionSequence);
     setPlayerTypes(types);
 
+    // Get hero position for the indicator
+    const heroPosition = scenario.positions[0];
+
     // Start animation after a short delay
     const speeds = SPEED_SETTINGS[speed];
     setTimeout(() => {
-      animateActions(actionSequence);
+      animateActions(actionSequence, heroPosition);
     }, speeds.initial / 2);
   }, [getRandomScenario, buildActionSequence, animateActions, speed]);
 
@@ -426,6 +450,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         showHeroHighlight={showHeroHighlight && userAnswer === null}
         blinds={blinds}
         playerTypes={playerTypes}
+        nextToActPosition={nextToActPosition}
       />
 
       <div className="situation-description">

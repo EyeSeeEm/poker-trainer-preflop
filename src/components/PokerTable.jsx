@@ -40,7 +40,8 @@ export default function PokerTable({
   showHeroHighlight = false,
   blinds = { sb: 5, bb: 5 },
   bets = {}, // { position: amount }
-  playerTypes = {} // { position: 'fish' | 'aggro' | 'passive' | 'tight' | 'pro' | 'reg' }
+  playerTypes = {}, // { position: 'fish' | 'aggro' | 'passive' | 'tight' | 'pro' | 'reg' }
+  nextToActPosition = null // Position of the player about to act
 }) {
   // Normalize hero position
   const normalizedHero = POSITION_ALIASES[heroPosition] || 'BTN';
@@ -64,6 +65,13 @@ export default function PokerTable({
       return normalizedPos === seatId;
     });
     return actionIndex !== -1 && actionIndex <= currentActionIndex;
+  };
+
+  // Check if seat is next to act
+  const isNextToAct = (seatId) => {
+    if (!nextToActPosition) return false;
+    const normalizedNext = POSITION_ALIASES[nextToActPosition] || nextToActPosition;
+    return normalizedNext === seatId;
   };
 
   // Determine dealer button position (BTN)
@@ -151,6 +159,7 @@ export default function PokerTable({
               const actionClass = action ? action.type.toLowerCase().replace(' ', '-') : '';
               const betAmount = getBetForSeat(seat.id);
               const hasFolded = isVisible && action && action.type === 'Fold';
+              const seatIsNextToAct = isNextToAct(seat.id);
 
               // Calculate position with rotation
               const adjustedAngle = seat.angle + rotationOffset;
@@ -189,9 +198,15 @@ export default function PokerTable({
 
                   {/* Seat */}
                   <div
-                    className={`seat ${isHero ? 'hero' : ''} ${isVisible ? `action-${actionClass}` : ''} ${showHeroHighlight && isHero ? 'highlight' : ''} ${hasFolded ? 'folded' : ''}`}
+                    className={`seat ${isHero ? 'hero' : ''} ${isVisible ? `action-${actionClass}` : ''} ${showHeroHighlight && isHero ? 'highlight' : ''} ${hasFolded ? 'folded' : ''} ${seatIsNextToAct ? 'next-to-act' : ''}`}
                     style={{ left: `${x}%`, top: `${y}%` }}
                   >
+                    {/* Next to act indicator */}
+                    {seatIsNextToAct && (
+                      <div className="next-to-act-indicator">
+                        <span className="indicator-arrow">👆</span>
+                      </div>
+                    )}
                     <div className="seat-avatar">
                       {isHero ? '👤' : (typeInfo ? typeInfo.icon : '👤')}
                     </div>
