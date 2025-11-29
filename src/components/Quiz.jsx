@@ -83,7 +83,7 @@ const loadSettings = () => {
   } catch (e) {
     console.error('Failed to load settings from localStorage:', e);
   }
-  return { speed: 'normal', cardSize: 'medium' };
+  return { speed: 'normal', cardSize: 'medium', chipStyle: 'default', playerColors: 'type' };
 };
 
 // Save settings to localStorage
@@ -108,12 +108,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [speed, setSpeed] = useState(() => loadSettings().speed);
   const [playerTypes, setPlayerTypes] = useState({});
   const [cardSize, setCardSize] = useState(() => loadSettings().cardSize);
+  const [chipStyle, setChipStyle] = useState(() => loadSettings().chipStyle || 'default');
+  const [playerColors, setPlayerColors] = useState(() => loadSettings().playerColors || 'type');
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [handHistory, setHandHistory] = useState([]); // Session history (recent 50 for display)
   const [nextToActPosition, setNextToActPosition] = useState(null);
   const [persistentHistory, setPersistentHistory] = useState(() => loadPersistentHistory());
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState(null); // For detail view
+  const [detailViewMode, setDetailViewMode] = useState('visual'); // 'visual' or 'text'
+  const [copySuccess, setCopySuccess] = useState(false);
   const animationIdRef = useRef(0); // Track current animation to cancel stale ones
   const historyPanelRef = useRef(null); // Ref for click outside detection
   const settingsPanelRef = useRef(null); // Ref for click outside detection
@@ -382,8 +386,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
 
   // Save settings to localStorage when they change
   useEffect(() => {
-    saveSettings({ speed, cardSize });
-  }, [speed, cardSize]);
+    saveSettings({ speed, cardSize, chipStyle, playerColors });
+  }, [speed, cardSize, chipStyle, playerColors]);
 
   // Handle click outside to close panels
   useEffect(() => {
@@ -431,7 +435,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       correctAnswer: correct,
       isCorrect,
       timestamp: Date.now(),
-      actions: [...actions] // Store the action sequence for hover display
+      actions: [...actions], // Store the action sequence for hover display
+      playerTypes: { ...playerTypes } // Store player types for display
     };
 
     // Record in session history (last 50 for display)
@@ -541,6 +546,54 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     return `You are ${getHeroPosition()}. Action on you.`;
   };
 
+  // Generate simplified plaintext hand history
+  const generatePlaintextHH = (item) => {
+    if (!item) return '';
+
+    const lines = [];
+
+    // Header
+    lines.push(`Scenario: ${item.scenario}`);
+    lines.push(`Hero: ${item.heroPosition} with ${item.hand}`);
+    lines.push('');
+    lines.push('--- Preflop ---');
+
+    // Actions
+    if (item.actions) {
+      item.actions.forEach(action => {
+        const actionText = action.text || action.type;
+        const pType = item.playerTypes?.[action.position];
+        const typeStr = pType ? ` (${pType})` : '';
+        lines.push(`${action.position}${typeStr}: ${actionText}`);
+      });
+    }
+
+    // Hero's decision
+    lines.push(`${item.heroPosition} (Hero): ${item.userAnswer}`);
+
+    // Result
+    lines.push('');
+    if (item.isCorrect) {
+      lines.push('Result: CORRECT');
+    } else {
+      lines.push(`Result: INCORRECT (should be ${item.correctAnswer})`);
+    }
+
+    return lines.join('\n');
+  };
+
+  // Copy plaintext HH to clipboard
+  const copyHandHistory = async (item) => {
+    const text = generatePlaintextHH(item);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   if (!currentScenario) {
     return <div className="quiz loading">Loading...</div>;
   }
@@ -606,6 +659,32 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               ))}
             </div>
           </div>
+          <div className="setting-group">
+            <label className="setting-label">Chip Style</label>
+            <div className="chip-style-buttons">
+              <button
+                className={`chip-style-btn ${chipStyle === 'default' ? 'active' : ''}`}
+                onClick={() => setChipStyle('default')}
+              >Default</button>
+              <button
+                className={`chip-style-btn ${chipStyle === 'berlin' ? 'active' : ''}`}
+                onClick={() => setChipStyle('berlin')}
+              >Berlin</button>
+            </div>
+          </div>
+          <div className="setting-group">
+            <label className="setting-label">Player Colors</label>
+            <div className="player-colors-buttons">
+              <button
+                className={`player-colors-btn ${playerColors === 'type' ? 'active' : ''}`}
+                onClick={() => setPlayerColors('type')}
+              >By Type</button>
+              <button
+                className={`player-colors-btn ${playerColors === 'off' ? 'active' : ''}`}
+                onClick={() => setPlayerColors('off')}
+              >Off</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -639,10 +718,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                   <>
                     <div className="detail-hand-info">
                       <div className="detail-hand-display">
-                        <HandDisplay hand={item.hand} size="small" />
+                        <HandDisplay hand={item.hand} size="mini" />
                       </div>
                       <div className="detail-scenario">{item.scenario}</div>
-                      <div className="detail-hero-position">You were: {item.heroPosition}</div>
                     </div>
 
                     <div className="detail-result-summary">
@@ -656,25 +734,63 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                       )}
                     </div>
 
-                    <div className="detail-actions-header">Action Sequence</div>
-                    <div className="detail-actions-list">
-                      {item.actions && item.actions.map((action, actionIdx) => (
-                        <div
-                          key={actionIdx}
-                          className={`detail-action-item ${action.isHeroAction ? 'hero-action' : ''} ${action.type.toLowerCase()}`}
+                    <div className="detail-view-controls">
+                      <div className="detail-view-toggle">
+                        <button
+                          className={`toggle-btn ${detailViewMode === 'visual' ? 'active' : ''}`}
+                          onClick={() => setDetailViewMode('visual')}
                         >
-                          <span className="detail-action-position">{action.position}</span>
-                          <span className="detail-action-text">{action.text || action.type}</span>
-                        </div>
-                      ))}
-                      <div className={`detail-action-item hero-action hero-decision ${item.isCorrect ? 'correct' : 'incorrect'}`}>
-                        <span className="detail-action-position">{item.heroPosition}</span>
-                        <span className="detail-action-text">
-                          {item.userAnswer}
-                          {!item.isCorrect && <span className="should-be"> (should: {item.correctAnswer})</span>}
-                        </span>
+                          Visual
+                        </button>
+                        <button
+                          className={`toggle-btn ${detailViewMode === 'text' ? 'active' : ''}`}
+                          onClick={() => setDetailViewMode('text')}
+                        >
+                          Text
+                        </button>
                       </div>
+                      <button
+                        className={`copy-btn ${copySuccess ? 'success' : ''}`}
+                        onClick={() => copyHandHistory(item)}
+                      >
+                        {copySuccess ? 'Copied!' : 'Copy'}
+                      </button>
                     </div>
+
+                    {detailViewMode === 'visual' ? (
+                      <>
+                        <div className="detail-actions-header">Action Sequence</div>
+                        <div className="detail-actions-list">
+                          {item.actions && item.actions.map((action, actionIdx) => {
+                            const pType = item.playerTypes?.[action.position];
+                            return (
+                              <div
+                                key={actionIdx}
+                                className={`detail-action-item ${action.isHeroAction ? 'hero-action' : ''} ${action.type.toLowerCase()}`}
+                              >
+                                <span className="detail-action-position">{action.position}</span>
+                                <span className={`detail-action-player-type ${pType ? `player-type-${pType}` : ''}`}>
+                                  {pType ? pType.toUpperCase() : ''}
+                                </span>
+                                <span className="detail-action-text">{action.text || action.type}</span>
+                              </div>
+                            );
+                          })}
+                          <div className={`detail-action-item hero-action hero-decision ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                            <span className="detail-action-position">{item.heroPosition}</span>
+                            <span className="detail-action-player-type"></span>
+                            <span className="detail-action-text">
+                              <span className="user-answer">{item.userAnswer}</span>
+                              {!item.isCorrect && <span className="should-be"> (should: {item.correctAnswer})</span>}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="detail-plaintext">
+                        <pre>{generatePlaintextHH(item)}</pre>
+                      </div>
+                    )}
                   </>
                 );
               })()}
@@ -757,6 +873,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
         blinds={blinds}
         playerTypes={playerTypes}
         nextToActPosition={nextToActPosition}
+        chipStyle={chipStyle}
+        playerColors={playerColors}
       />
 
       <div className="situation-description">
