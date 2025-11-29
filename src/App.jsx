@@ -7,10 +7,12 @@ function App() {
   const [gameState, setGameState] = useState('settings'); // 'settings' or 'quiz'
   const [selectedScenarios, setSelectedScenarios] = useState([]);
   const [blinds, setBlinds] = useState({ sb: 5, bb: 5 });
+  const [difficulty, setDifficulty] = useState('medium');
 
-  const handleStartTraining = (scenarios, selectedBlinds) => {
+  const handleStartTraining = (scenarios, selectedBlinds, selectedDifficulty) => {
     setSelectedScenarios(scenarios);
     setBlinds(selectedBlinds);
+    setDifficulty(selectedDifficulty);
     setGameState('quiz');
   };
 
@@ -26,6 +28,7 @@ function App() {
         <Quiz
           scenarios={selectedScenarios}
           blinds={blinds}
+          difficulty={difficulty}
           onBack={handleBackToSettings}
         />
       )}

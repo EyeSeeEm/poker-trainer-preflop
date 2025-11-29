@@ -4,6 +4,16 @@ import { getCorrectAction } from './rangeLogic';
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const RANK_VALUES = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
 
+// Difficulty settings - controls which hands are shown based on distance from boundary
+// Easy: all hands including obvious ones
+// Medium: hands within distance 5 of boundary (moderately close)
+// Hard: hands within distance 2 of boundary (very close, borderline decisions)
+const DIFFICULTY_SETTINGS = {
+  easy: { maxDistance: Infinity, includeObvious: true },
+  medium: { maxDistance: 5, includeObvious: false },
+  hard: { maxDistance: 2, includeObvious: false }
+};
+
 // Obvious hands that are always in range for specific actions - not interesting to test
 const OBVIOUS_OPEN_HANDS = new Set([
   'AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'KQs'
@@ -190,46 +200,125 @@ function findBoundaryInRangeHands(category, scenario, allHands) {
   return boundaryHands;
 }
 
-// Get a smart random hand for a scenario
-// This ensures hands are interesting (near the boundary), avoiding obvious plays
-export function getSmartRandomHand(category, scenario) {
-  const allHands = generateAllHands();
+// Score all hands by their distance to the boundary
+function scoreAllHands(category, scenario, allHands) {
+  const inRangeHands = [];
+  const foldHands = [];
   const obviousHands = getObviousHands(category);
 
-  // 65% chance to show a hand that's in range (raise/call)
-  // 35% chance to show a fold hand (but a challenging one)
-  const showInRangeHand = Math.random() < 0.65;
+  allHands.forEach(hand => {
+    const action = getCorrectAction(hand, category, scenario);
+    if (action === 'Fold') {
+      foldHands.push(hand);
+    } else {
+      inRangeHands.push(hand);
+    }
+  });
 
-  if (showInRangeHand) {
-    // Get boundary in-range hands (interesting ones near the fold boundary)
-    const boundaryInRange = findBoundaryInRangeHands(category, scenario, allHands);
+  const scoredHands = [];
 
-    if (boundaryInRange.length > 0) {
-      return boundaryInRange[Math.floor(Math.random() * boundaryInRange.length)];
+  // Score in-range hands by distance to nearest fold hand
+  inRangeHands.forEach(hand => {
+    const isObvious = obviousHands.has(hand);
+    let minDistance = Infinity;
+
+    if (foldHands.length > 0) {
+      foldHands.forEach(foldHand => {
+        const dist = handDistance(hand, foldHand);
+        if (dist < minDistance) minDistance = dist;
+      });
     }
 
-    // Fallback: any non-obvious in-range hand
-    const inRangeHands = allHands.filter(hand => {
-      const action = getCorrectAction(hand, category, scenario);
-      return action !== 'Fold' && !obviousHands.has(hand);
+    scoredHands.push({
+      hand,
+      action: getCorrectAction(hand, category, scenario),
+      distance: minDistance,
+      isObvious,
+      isFold: false
     });
+  });
+
+  // Score fold hands by distance to nearest in-range hand
+  foldHands.forEach(hand => {
+    let minDistance = Infinity;
 
     if (inRangeHands.length > 0) {
-      return inRangeHands[Math.floor(Math.random() * inRangeHands.length)];
+      inRangeHands.forEach(rangeHand => {
+        const dist = handDistance(hand, rangeHand);
+        if (dist < minDistance) minDistance = dist;
+      });
     }
+
+    scoredHands.push({
+      hand,
+      action: 'Fold',
+      distance: minDistance,
+      isObvious: false,
+      isFold: true
+    });
+  });
+
+  return scoredHands;
+}
+
+// Get a smart random hand for a scenario based on difficulty
+// difficulty: 'easy' | 'medium' | 'hard'
+export function getSmartRandomHand(category, scenario, difficulty = 'medium') {
+  const allHands = generateAllHands();
+  const settings = DIFFICULTY_SETTINGS[difficulty] || DIFFICULTY_SETTINGS.medium;
+
+  // Score all hands by their distance to the boundary
+  const scoredHands = scoreAllHands(category, scenario, allHands);
+
+  // Filter hands based on difficulty settings
+  let eligibleHands = scoredHands.filter(h => {
+    // Check distance constraint
+    if (h.distance > settings.maxDistance) return false;
+
+    // Check obvious constraint
+    if (!settings.includeObvious && h.isObvious) return false;
+
+    return true;
+  });
+
+  // If no hands match the criteria (very tight filter), fall back to medium settings
+  if (eligibleHands.length === 0) {
+    const fallbackSettings = DIFFICULTY_SETTINGS.medium;
+    eligibleHands = scoredHands.filter(h => {
+      if (h.distance > fallbackSettings.maxDistance) return false;
+      if (!fallbackSettings.includeObvious && h.isObvious) return false;
+      return true;
+    });
   }
 
-  // Get boundary fold hands (challenging folds)
-  const boundaryFolds = findBoundaryFoldHands(category, scenario, allHands);
-
-  if (boundaryFolds.length > 0) {
-    return boundaryFolds[Math.floor(Math.random() * boundaryFolds.length)];
+  // Still no hands? Use all non-obvious hands
+  if (eligibleHands.length === 0) {
+    eligibleHands = scoredHands.filter(h => !h.isObvious);
   }
 
-  // Fallback to any non-obvious hand
-  const nonObviousHands = allHands.filter(h => !obviousHands.has(h));
-  if (nonObviousHands.length > 0) {
-    return nonObviousHands[Math.floor(Math.random() * nonObviousHands.length)];
+  // Last resort: any hand
+  if (eligibleHands.length === 0) {
+    eligibleHands = scoredHands;
+  }
+
+  // 65% chance to show a hand that's in range (raise/call)
+  // 35% chance to show a fold hand
+  const showInRangeHand = Math.random() < 0.65;
+
+  const inRangeEligible = eligibleHands.filter(h => !h.isFold);
+  const foldEligible = eligibleHands.filter(h => h.isFold);
+
+  if (showInRangeHand && inRangeEligible.length > 0) {
+    return inRangeEligible[Math.floor(Math.random() * inRangeEligible.length)].hand;
+  }
+
+  if (foldEligible.length > 0) {
+    return foldEligible[Math.floor(Math.random() * foldEligible.length)].hand;
+  }
+
+  // Fallback
+  if (eligibleHands.length > 0) {
+    return eligibleHands[Math.floor(Math.random() * eligibleHands.length)].hand;
   }
 
   return allHands[Math.floor(Math.random() * allHands.length)];

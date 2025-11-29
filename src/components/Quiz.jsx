@@ -95,7 +95,7 @@ const saveSettings = (settings) => {
   }
 };
 
-export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
+export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty = 'medium', onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [currentHand, setCurrentHand] = useState('');
   const [userAnswer, setUserAnswer] = useState(null);
@@ -349,7 +349,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
 
     setCurrentScenario(scenario);
     // Use smart hand selection - ensures fold hands are near the range boundary
-    setCurrentHand(getSmartRandomHand(scenario.category, scenario.key));
+    setCurrentHand(getSmartRandomHand(scenario.category, scenario.key, difficulty));
     setUserAnswer(null);
     setCorrectAnswer(null);
     setCurrentActionIndex(-1);

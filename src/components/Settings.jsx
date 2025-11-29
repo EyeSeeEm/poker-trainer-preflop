@@ -13,7 +13,8 @@ const loadSavedSelections = () => {
       return {
         positions: new Set(parsed.positions || ['BTN', 'BB']),
         situations: new Set(parsed.situations || ['open', 'vs_open']),
-        blindsIndex: parsed.blindsIndex ?? 2
+        blindsIndex: parsed.blindsIndex ?? 2,
+        difficulty: parsed.difficulty || 'medium'
       };
     }
   } catch (e) {
@@ -23,12 +24,13 @@ const loadSavedSelections = () => {
 };
 
 // Save selections to localStorage
-const saveSelections = (positions, situations, blindsIndex) => {
+const saveSelections = (positions, situations, blindsIndex, difficulty) => {
   try {
     localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify({
       positions: Array.from(positions),
       situations: Array.from(situations),
-      blindsIndex
+      blindsIndex,
+      difficulty
     }));
   } catch (e) {
     console.error('Failed to save selections to localStorage:', e);
@@ -59,6 +61,12 @@ const BLIND_OPTIONS = [
   { sb: 5, bb: 10, label: '$5/$10' },
   { sb: 10, bb: 20, label: '$10/$20' },
   { sb: 25, bb: 50, label: '$25/$50' }
+];
+
+const DIFFICULTY_OPTIONS = [
+  { key: 'easy', label: 'Easy', description: 'All hands including obvious plays' },
+  { key: 'medium', label: 'Medium', description: 'Hands closer to range boundaries' },
+  { key: 'hard', label: 'Hard', description: 'Only borderline decisions' }
 ];
 
 // Map scenarios to positions and situations
@@ -107,12 +115,15 @@ export default function Settings({ onStartTraining }) {
   const [selectedBlindsIndex, setSelectedBlindsIndex] = useState(
     savedSelections?.blindsIndex ?? 2
   );
+  const [selectedDifficulty, setSelectedDifficulty] = useState(
+    savedSelections?.difficulty || 'medium'
+  );
   const selectedBlinds = BLIND_OPTIONS[selectedBlindsIndex];
 
   // Save selections to localStorage whenever they change
   useEffect(() => {
-    saveSelections(selectedPositions, selectedSituations, selectedBlindsIndex);
-  }, [selectedPositions, selectedSituations, selectedBlindsIndex]);
+    saveSelections(selectedPositions, selectedSituations, selectedBlindsIndex, selectedDifficulty);
+  }, [selectedPositions, selectedSituations, selectedBlindsIndex, selectedDifficulty]);
 
   const togglePosition = (pos) => {
     const newSet = new Set(selectedPositions);
@@ -161,7 +172,7 @@ export default function Settings({ onStartTraining }) {
   const canStart = selectedPositions.size > 0 && selectedSituations.size > 0 && availableScenarios.length > 0;
 
   const handleStart = () => {
-    onStartTraining(availableScenarios, selectedBlinds);
+    onStartTraining(availableScenarios, selectedBlinds, selectedDifficulty);
   };
 
   return (
@@ -232,6 +243,27 @@ export default function Settings({ onStartTraining }) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="settings-section difficulty-section">
+        <div className="section-header">
+          <h2>Difficulty</h2>
+        </div>
+        <div className="difficulty-options">
+          {DIFFICULTY_OPTIONS.map(diff => (
+            <button
+              key={diff.key}
+              className={`difficulty-button ${selectedDifficulty === diff.key ? 'selected' : ''}`}
+              onClick={() => setSelectedDifficulty(diff.key)}
+              title={diff.description}
+            >
+              {diff.label}
+            </button>
+          ))}
+        </div>
+        <p className="difficulty-description">
+          {DIFFICULTY_OPTIONS.find(d => d.key === selectedDifficulty)?.description}
+        </p>
       </div>
 
       <div className="scenarios-preview">
