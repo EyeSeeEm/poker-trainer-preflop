@@ -165,8 +165,15 @@ export default function Settings({ onStartTraining }) {
 
   return (
     <div className="settings">
-      <h1>Poker Preflop Trainer</h1>
-      <p className="subtitle">Configure your training session</p>
+      {/* Hero section with decorative cards */}
+      <div className="hero-section">
+        <div className="decorative-cards">
+          <div className="deco-card card-1">A<span className="suit spade">♠</span></div>
+          <div className="deco-card card-2">K<span className="suit spade">♠</span></div>
+        </div>
+        <h1>ESM's Poker Preflop Trainer</h1>
+        <p className="subtitle">Master your preflop ranges</p>
+      </div>
 
       <div className="settings-grid">
         <div className="settings-section">
@@ -242,7 +249,7 @@ export default function Settings({ onStartTraining }) {
         onClick={handleStart}
         disabled={!canStart}
       >
-        {canStart ? `Start Training (${availableScenarios.length} scenarios)` : 'Select at least one position and situation'}
+        {canStart ? 'Start Training' : 'Select at least one position and situation'}
       </button>
     </div>
   );
