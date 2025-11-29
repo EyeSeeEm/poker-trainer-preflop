@@ -780,8 +780,15 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                             <span className="detail-action-position">{item.heroPosition}</span>
                             <span className="detail-action-player-type"></span>
                             <span className="detail-action-text">
-                              <span className="user-answer">{item.userAnswer}</span>
-                              {!item.isCorrect && <span className="should-be"> (should: {item.correctAnswer})</span>}
+                              {item.userAnswer}
+                              {item.isCorrect ? (
+                                <span className="result-icon correct">✓</span>
+                              ) : (
+                                <>
+                                  <span className="result-icon incorrect">✗</span>
+                                  <span className="should-be">(should: {item.correctAnswer})</span>
+                                </>
+                              )}
                             </span>
                           </div>
                         </div>

@@ -673,7 +673,15 @@
   font-weight: 600;
 }
 
-.detail-action-item.incorrect .detail-action-text .user-answer {
+.detail-action-text .result-icon {
+  margin: 0 6px;
+}
+
+.detail-action-text .result-icon.correct {
+  color: #2ecc71;
+}
+
+.detail-action-text .result-icon.incorrect {
   color: #e74c3c;
 }
 
