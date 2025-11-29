@@ -18,6 +18,15 @@ const SITUATIONS = [
   { key: 'vs_4bet', label: 'Vs 4-Bet' }
 ];
 
+const BLIND_OPTIONS = [
+  { sb: 1, bb: 2, label: '$1/$2' },
+  { sb: 2, bb: 5, label: '$2/$5' },
+  { sb: 5, bb: 5, label: '$5/$5' },
+  { sb: 5, bb: 10, label: '$5/$10' },
+  { sb: 10, bb: 20, label: '$10/$20' },
+  { sb: 25, bb: 50, label: '$25/$50' }
+];
+
 // Map scenarios to positions and situations
 export const SCENARIO_MAPPINGS = {
   // Open Ranges
@@ -55,6 +64,7 @@ export const SCENARIO_MAPPINGS = {
 export default function Settings({ onStartTraining }) {
   const [selectedPositions, setSelectedPositions] = useState(new Set(['BTN', 'BB']));
   const [selectedSituations, setSelectedSituations] = useState(new Set(['open', 'vs_open']));
+  const [selectedBlinds, setSelectedBlinds] = useState(BLIND_OPTIONS[2]); // Default $5/$5
 
   const togglePosition = (pos) => {
     const newSet = new Set(selectedPositions);
@@ -103,7 +113,7 @@ export default function Settings({ onStartTraining }) {
   const canStart = selectedPositions.size > 0 && selectedSituations.size > 0 && availableScenarios.length > 0;
 
   const handleStart = () => {
-    onStartTraining(availableScenarios);
+    onStartTraining(availableScenarios, selectedBlinds);
   };
 
   return (
@@ -156,6 +166,23 @@ export default function Settings({ onStartTraining }) {
               </label>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="settings-section blinds-section">
+        <div className="section-header">
+          <h2>Blinds</h2>
+        </div>
+        <div className="blinds-options">
+          {BLIND_OPTIONS.map((blind, index) => (
+            <button
+              key={index}
+              className={`blind-button ${selectedBlinds === blind ? 'selected' : ''}`}
+              onClick={() => setSelectedBlinds(blind)}
+            >
+              {blind.label}
+            </button>
+          ))}
         </div>
       </div>
 

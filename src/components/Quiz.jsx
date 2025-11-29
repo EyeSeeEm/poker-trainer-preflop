@@ -6,7 +6,7 @@ import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
-export default function Quiz({ scenarios, onBack }) {
+export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [currentHand, setCurrentHand] = useState('');
   const [userAnswer, setUserAnswer] = useState(null);
@@ -271,6 +271,7 @@ export default function Quiz({ scenarios, onBack }) {
         actions={actions}
         currentActionIndex={currentActionIndex}
         showHeroHighlight={showHeroHighlight && userAnswer === null}
+        blinds={blinds}
       />
 
       <div className="situation-description">
