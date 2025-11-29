@@ -1,0 +1,162 @@
+.hand-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.cards-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.card {
+  width: 90px;
+  height: 126px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 8px;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.card-overlap {
+  margin-left: -30px;
+  transform: rotate(5deg);
+}
+
+.card:first-child {
+  transform: rotate(-5deg);
+}
+
+.card:hover {
+  transform: scale(1.05) rotate(0deg);
+  z-index: 10;
+}
+
+.card-overlap:hover {
+  transform: scale(1.05) rotate(0deg);
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 6px;
+}
+
+.card-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.card-corner.top-left {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+}
+
+.card-corner.bottom-right {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  transform: rotate(180deg);
+}
+
+.corner-rank {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.corner-suit {
+  font-size: 14px;
+  margin-top: -2px;
+}
+
+.card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.center-suit {
+  font-size: 42px;
+}
+
+/* Colors */
+.black {
+  color: #1a1a1a;
+}
+
+.red {
+  color: #c41e3a;
+}
+
+/* Hand label */
+.hand-label {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #e0e0e0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hand-type {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #3a4a5a;
+  color: #a0b0c0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hand-type.suited {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.hand-type.offsuit {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .card {
+    width: 70px;
+    height: 98px;
+  }
+
+  .card-overlap {
+    margin-left: -25px;
+  }
+
+  .corner-rank {
+    font-size: 14px;
+  }
+
+  .corner-suit {
+    font-size: 11px;
+  }
+
+  .center-suit {
+    font-size: 32px;
+  }
+
+  .hand-label {
+    font-size: 20px;
+  }
+}

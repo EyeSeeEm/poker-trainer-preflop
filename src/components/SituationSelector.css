@@ -1,0 +1,60 @@
+.situation-selector {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.situation-selector h1 {
+  text-align: center;
+  color: #e0e0e0;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #b0b0b0;
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+.situation-group {
+  margin-bottom: 40px;
+}
+
+.situation-group h2 {
+  color: #e0e0e0;
+  font-size: 24px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #4a5568;
+  padding-bottom: 8px;
+}
+
+.scenario-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.scenario-button {
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #2d3748;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.scenario-button:hover {
+  background: #4a5568;
+  border-color: #5a6578;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.scenario-button:active {
+  transform: translateY(0);
+}

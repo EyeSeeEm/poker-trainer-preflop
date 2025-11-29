@@ -1,0 +1,217 @@
+.poker-table-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.table-rail {
+  position: relative;
+  width: 100%;
+  padding-top: 65%; /* Aspect ratio */
+  background: linear-gradient(145deg, #5a3825, #3d2518);
+  border-radius: 50%;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 2px 8px rgba(255, 255, 255, 0.1),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.table-felt {
+  position: absolute;
+  top: 8%;
+  left: 8%;
+  right: 8%;
+  bottom: 8%;
+  background: linear-gradient(145deg, #1a5c3a, #0d4528);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 10px rgba(255, 255, 255, 0.05);
+  overflow: visible;
+}
+
+.table-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.pot-area {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 25px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pot-label {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* Seat styling */
+.seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.seat-avatar {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(145deg, #2a3a4a, #1a2a3a);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 3px solid #3a4a5a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.seat.hero .seat-avatar {
+  border-color: #5b9bd5;
+  box-shadow: 0 0 15px rgba(91, 155, 213, 0.3);
+}
+
+.seat.highlight .seat-avatar {
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  animation: pulse-highlight 1s ease-in-out infinite;
+}
+
+@keyframes pulse-highlight {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+.seat-label {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a0b0c0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.seat.hero .seat-label {
+  color: #5b9bd5;
+}
+
+/* Dealer button */
+.dealer-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(145deg, #f0e68c, #daa520);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #1a1a1a;
+  border: 2px solid #ffd700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+/* Action bubbles */
+.action-bubble {
+  position: absolute;
+  top: -30px;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  animation: bubble-appear 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes bubble-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Action states */
+.action-bubble.fold {
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: #888;
+}
+
+.action-bubble.raise,
+.action-bubble.open,
+.action-bubble.3bet,
+.action-bubble.4bet,
+.action-bubble.5bet {
+  background: linear-gradient(145deg, #e67e22, #d35400);
+  color: white;
+}
+
+.action-bubble.call {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  color: white;
+}
+
+/* Seat action visual states */
+.seat.action-fold .seat-avatar {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
+.seat.action-raise .seat-avatar,
+.seat.action-open .seat-avatar,
+.seat.action-3bet .seat-avatar,
+.seat.action-4bet .seat-avatar,
+.seat.action-5bet .seat-avatar {
+  border-color: #e67e22;
+  box-shadow: 0 0 15px rgba(230, 126, 34, 0.5);
+}
+
+.seat.action-call .seat-avatar {
+  border-color: #3498db;
+  box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .seat-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .seat-label {
+    font-size: 10px;
+  }
+
+  .action-bubble {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .dealer-button {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+}
