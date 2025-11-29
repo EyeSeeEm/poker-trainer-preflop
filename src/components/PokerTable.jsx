@@ -104,15 +104,9 @@ export default function PokerTable({
       <div className="table-outer-rail">
         <div className="table-rail">
           <div className="table-felt">
-            {/* Pot in center */}
+            {/* Pot in center - just text, no chips until collected */}
             <div className="pot-area">
-              <div className="pot-chips">
-                <div className="chip-stack">
-                  <div className="chip red"></div>
-                  <div className="chip blue"></div>
-                  <div className="chip green"></div>
-                </div>
-              </div>
+              <span className="pot-label">Total Pot</span>
               <span className="pot-amount">${calculatePot()}</span>
             </div>
 

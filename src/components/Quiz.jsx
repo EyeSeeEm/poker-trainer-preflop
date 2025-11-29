@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import HandDisplay from './HandDisplay';
 import PokerTable from './PokerTable';
-import { getRandomHand } from '../utils/handGeneration';
+import { getSmartRandomHand } from '../utils/smartHandSelection';
 import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
@@ -87,7 +87,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     if (!scenario) return;
 
     setCurrentScenario(scenario);
-    setCurrentHand(getRandomHand());
+    // Use smart hand selection - ensures fold hands are near the range boundary
+    setCurrentHand(getSmartRandomHand(scenario.category, scenario.key));
     setUserAnswer(null);
     setCorrectAnswer(null);
     setCurrentActionIndex(-1);
