@@ -13,8 +13,9 @@ const SPEED_SETTINGS = {
   faster: { fold: 100, call: 150, raise: 250, initial: 100, feedback: 700, point: 150 }
 };
 
-// localStorage key for persistent history
+// localStorage keys
 const HISTORY_STORAGE_KEY = 'poker-trainer-history';
+const SETTINGS_STORAGE_KEY = 'poker-trainer-settings';
 
 // Card size options
 const CARD_SIZES = ['small', 'medium', 'large'];
@@ -41,6 +42,28 @@ const savePersistentHistory = (history) => {
   }
 };
 
+// Load settings from localStorage
+const loadSettings = () => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load settings from localStorage:', e);
+  }
+  return { speed: 'normal', cardSize: 'medium' };
+};
+
+// Save settings to localStorage
+const saveSettings = (settings) => {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Failed to save settings to localStorage:', e);
+  }
+};
+
 export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [currentHand, setCurrentHand] = useState('');
@@ -52,9 +75,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentActionIndex, setCurrentActionIndex] = useState(-1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHeroHighlight, setShowHeroHighlight] = useState(false);
-  const [speed, setSpeed] = useState('normal');
+  const [speed, setSpeed] = useState(() => loadSettings().speed);
   const [playerTypes, setPlayerTypes] = useState({});
-  const [cardSize, setCardSize] = useState('medium');
+  const [cardSize, setCardSize] = useState(() => loadSettings().cardSize);
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [handHistory, setHandHistory] = useState([]); // Session history (recent 50 for display)
@@ -73,6 +96,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     const actions = [];
     const types = {};
     const mapping = scenario;
+    const heroPosition = mapping.positions[0];
 
     // Add limpers first (they act before opens)
     if (mapping.limper) {
@@ -87,6 +111,20 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       if (mapping.limper2Type) {
         types[mapping.limper2] = mapping.limper2Type;
       }
+    }
+
+    // For vs_3bet scenarios: Hero opened first, then villain 3bets
+    if (mapping.category === 'vs_3bet_ranges' && mapping.villainAction === '3bet') {
+      // Show hero's opening raise first
+      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
+    }
+
+    // For vs_4bet scenarios: Villain opened, hero 3bet, now villain 4bets
+    if (mapping.category === 'vs_4bet_ranges' && mapping.villainAction === '4bet') {
+      // Show villain's opening raise first
+      actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      // Then hero's 3bet
+      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet', isHeroAction: true });
     }
 
     // Add villain actions based on scenario type
@@ -204,6 +242,11 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       nextHand();
     }
   }, [scenarios]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    saveSettings({ speed, cardSize });
+  }, [speed, cardSize]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
