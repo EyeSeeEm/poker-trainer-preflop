@@ -29,8 +29,8 @@ const PLAYER_TYPE_INFO = {
   'aggro': { label: 'Aggro', color: '#e74c3c', icon: '🔥' },
   'passive': { label: 'Passive', color: '#95a5a6', icon: '🐢' },
   'tight': { label: 'Tight', color: '#9b59b6', icon: '🔒' },
-  'pro': { label: 'Pro', color: '#f1c40f', icon: '⭐' },
-  'reg': { label: 'Reg', color: '#1abc9c', icon: '📊' }
+  'pro': { label: 'Pro', color: '#e67e22', icon: '⭐' },
+  'reg': { label: 'Reg', color: '#2ecc71', icon: '📊' }
 };
 
 export default function PokerTable({
@@ -42,7 +42,9 @@ export default function PokerTable({
   blinds = { sb: 5, bb: 5 },
   bets = {}, // { position: amount }
   playerTypes = {}, // { position: 'fish' | 'aggro' | 'passive' | 'tight' | 'pro' | 'reg' }
-  nextToActPosition = null // Position of the player about to act
+  nextToActPosition = null, // Position of the player about to act
+  chipStyle = 'default', // 'default' or 'berlin'
+  playerColors = 'type' // 'type' or 'off'
 }) {
   // Normalize hero position
   const normalizedHero = POSITION_ALIASES[heroPosition] || 'BTN';
@@ -163,7 +165,7 @@ export default function PokerTable({
   };
 
   return (
-    <div className="poker-table-container">
+    <div className={`poker-table-container ${chipStyle === 'berlin' ? 'berlin-chips' : ''}`}>
       <div className="table-outer-rail">
         <div className="table-rail">
           <div className="table-felt">
@@ -335,7 +337,7 @@ export default function PokerTable({
                       <div className="bet-chips">
                         {displayBetAmount >= blinds.bb * 5 && <div className="chip black"></div>}
                         {displayBetAmount >= blinds.bb * 2 && <div className="chip red"></div>}
-                        <div className="chip green"></div>
+                        <div className={`chip ${chipStyle === 'berlin' ? 'white' : 'green'}`}></div>
                       </div>
                       {/* Show bet amount when appropriate */}
                       {showBetAmount && (
@@ -346,7 +348,7 @@ export default function PokerTable({
 
                   {/* Seat */}
                   <div
-                    className={`seat ${isHero ? 'hero' : ''} ${isVisible ? `action-${actionClass}` : ''} ${showHeroHighlight && isHero ? 'highlight' : ''} ${hasFolded ? 'folded' : ''} ${seatIsNextToAct ? 'next-to-act' : ''}`}
+                    className={`seat ${isHero ? 'hero' : ''} ${hasFolded ? 'folded' : ''} ${seatIsNextToAct ? 'next-to-act' : ''} ${typeInfo && !hasFolded && playerColors === 'type' ? `player-type-${playerType}` : ''} ${typeInfo && !hasFolded && playerColors === 'off' ? 'player-type-off' : ''}`}
                     style={{ left: `${x}%`, top: `${y}%` }}
                   >
                     {/* Next to act indicator */}
@@ -367,9 +369,9 @@ export default function PokerTable({
                       )}
                       <span className="seat-stack">${blinds.bb * 100}</span>
                     </div>
-                    {/* Show action bubble for all players */}
-                    {isVisible && action && (
-                      <div className={`action-bubble ${actionClass}`}>
+                    {/* Show action bubble for non-fold actions */}
+                    {isVisible && action && actionClass !== 'fold' && (
+                      <div className={`action-bubble ${actionClass} ${typeInfo && playerColors === 'type' ? `player-${playerType}` : ''} ${typeInfo && playerColors === 'off' ? 'player-off' : ''}`}>
                         {action.text || action.type}
                       </div>
                     )}
