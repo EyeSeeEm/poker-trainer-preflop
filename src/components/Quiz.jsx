@@ -551,18 +551,14 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
         <button className="back-btn" onClick={onBack}>
           ← Back
         </button>
-        <div className="score-display">
+        <button
+          className="score-display"
+          onClick={() => setShowHistory(!showHistory)}
+          title="Hand History"
+        >
           <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
-        </div>
+        </button>
         <div className="header-actions">
-          <button
-            className={`history-btn ${handHistory.length > 0 ? 'has-history' : ''}`}
-            onClick={() => setShowHistory(!showHistory)}
-            title="Hand History"
-          >
-            <span className="history-icon">📋</span>
-            {handHistory.length > 0 && <span className="history-count">{handHistory.length}</span>}
-          </button>
           <button
             className="settings-btn"
             onClick={() => setShowSettings(!showSettings)}
