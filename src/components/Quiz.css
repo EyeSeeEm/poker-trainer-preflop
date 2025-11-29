@@ -223,7 +223,7 @@
 
 /* History Panel */
 .history-panel {
-  max-height: 650px;
+  max-height: 845px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -489,7 +489,7 @@
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
-  max-height: 550px;
+  max-height: 715px;
 }
 
 .detail-hand-info {
@@ -753,7 +753,7 @@
   border-radius: 8px;
   padding: 16px;
   overflow-x: auto;
-  min-height: 200px;
+  min-height: 300px;
   flex: 1;
 }
 
