@@ -95,8 +95,8 @@ function findBoundaryFoldHands(category, scenario, allHands) {
   const foldHands = [];
 
   allHands.forEach(hand => {
-    const action = getCorrectAction(hand, category, scenario);
-    if (action === 'Fold') {
+    const result = getCorrectAction(hand, category, scenario);
+    if (result.action === 'Fold') {
       foldHands.push(hand);
     } else {
       inRangeHands.push(hand);
@@ -151,8 +151,8 @@ function findBoundaryInRangeHands(category, scenario, allHands) {
   const obviousHands = getObviousHands(category);
 
   allHands.forEach(hand => {
-    const action = getCorrectAction(hand, category, scenario);
-    if (action === 'Fold') {
+    const result = getCorrectAction(hand, category, scenario);
+    if (result.action === 'Fold') {
       foldHands.push(hand);
     } else {
       inRangeHands.push(hand);
@@ -207,8 +207,8 @@ function scoreAllHands(category, scenario, allHands) {
   const obviousHands = getObviousHands(category);
 
   allHands.forEach(hand => {
-    const action = getCorrectAction(hand, category, scenario);
-    if (action === 'Fold') {
+    const result = getCorrectAction(hand, category, scenario);
+    if (result.action === 'Fold') {
       foldHands.push(hand);
     } else {
       inRangeHands.push(hand);
@@ -231,7 +231,7 @@ function scoreAllHands(category, scenario, allHands) {
 
     scoredHands.push({
       hand,
-      action: getCorrectAction(hand, category, scenario),
+      action: getCorrectAction(hand, category, scenario).action,
       distance: minDistance,
       isObvious,
       isFold: false
