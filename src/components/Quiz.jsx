@@ -6,10 +6,10 @@ import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
-// Speed settings - added 'point' for dealer pointing at next player, 'quickFold' for intermediate folds
+// Speed settings - 'normal' is 2x original speed, 'fast' is 2.5x, 'faster' is 3x
 const SPEED_SETTINGS = {
-  normal: { fold: 400, call: 600, raise: 900, initial: 100, feedback: 2000, point: 500, quickFold: 50 },
-  fast: { fold: 200, call: 350, raise: 500, initial: 100, feedback: 1200, point: 300, quickFold: 50 },
+  normal: { fold: 200, call: 350, raise: 500, initial: 100, feedback: 1200, point: 300, quickFold: 50 },
+  fast: { fold: 160, call: 280, raise: 400, initial: 80, feedback: 900, point: 240, quickFold: 40 },
   faster: { fold: 100, call: 150, raise: 250, initial: 100, feedback: 700, point: 150, quickFold: 50 }
 };
 
