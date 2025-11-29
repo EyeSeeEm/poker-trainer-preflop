@@ -255,6 +255,13 @@
   font-weight: 500;
 }
 
+.player-type {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Action bubbles */
 .action-bubble {
   position: absolute;
@@ -320,6 +327,16 @@
 .seat.action-call .seat-avatar {
   border-color: #3498db;
   box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+}
+
+.seat.action-limp .seat-avatar {
+  border-color: #9b59b6;
+  box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
+}
+
+.action-bubble.limp {
+  background: linear-gradient(145deg, #9b59b6, #8e44ad);
+  color: white;
 }
 
 /* Responsive adjustments */

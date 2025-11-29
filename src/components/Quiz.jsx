@@ -6,6 +6,13 @@ import { getCorrectAction } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
 import './Quiz.css';
 
+// Speed settings
+const SPEED_SETTINGS = {
+  normal: { fold: 400, call: 600, raise: 900, initial: 600, feedback: 2000 },
+  fast: { fold: 200, call: 350, raise: 500, initial: 350, feedback: 1200 },
+  faster: { fold: 100, call: 150, raise: 250, initial: 150, feedback: 700 }
+};
+
 export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [currentHand, setCurrentHand] = useState('');
@@ -17,6 +24,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [currentActionIndex, setCurrentActionIndex] = useState(-1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHeroHighlight, setShowHeroHighlight] = useState(false);
+  const [speed, setSpeed] = useState('normal');
+  const [playerTypes, setPlayerTypes] = useState({});
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -25,10 +34,26 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     return scenarios[index];
   }, [scenarios]);
 
-  // Build action sequence for the current scenario
+  // Build action sequence and player types for the current scenario
   const buildActionSequence = useCallback((scenario) => {
     const actions = [];
+    const types = {};
     const mapping = scenario;
+
+    // Add limpers first (they act before opens)
+    if (mapping.limper) {
+      actions.push({ position: mapping.limper, type: 'Limp', text: 'Limp' });
+      if (mapping.limperType) {
+        types[mapping.limper] = mapping.limperType;
+      }
+    }
+
+    if (mapping.limper2) {
+      actions.push({ position: mapping.limper2, type: 'Limp', text: 'Limp' });
+      if (mapping.limper2Type) {
+        types[mapping.limper2] = mapping.limper2Type;
+      }
+    }
 
     // Add villain actions based on scenario type
     if (mapping.villain) {
@@ -39,19 +64,28 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       } else if (mapping.villainAction === '4bet') {
         actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet' });
       }
+      if (mapping.villainType) {
+        types[mapping.villain] = mapping.villainType;
+      }
     }
 
     // Add second villain for cold 4bet scenarios
     if (mapping.villain2) {
       actions.push({ position: mapping.villain2, type: mapping.villain2Action, text: mapping.villain2Action === '3bet' ? '3-Bet' : mapping.villain2Action });
+      if (mapping.villain2Type) {
+        types[mapping.villain2] = mapping.villain2Type;
+      }
     }
 
     // Add caller for squeeze scenarios
     if (mapping.caller) {
       actions.push({ position: mapping.caller, type: 'Call', text: 'Call' });
+      if (mapping.callerType) {
+        types[mapping.caller] = mapping.callerType;
+      }
     }
 
-    return actions;
+    return { actions, types };
   }, []);
 
   // Animate actions in sequence
@@ -62,14 +96,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       return;
     }
 
+    const speeds = SPEED_SETTINGS[speed];
     setIsAnimating(true);
     let index = 0;
 
     const animateNext = () => {
       if (index < actionsToAnimate.length) {
         setCurrentActionIndex(index);
-        const delay = actionsToAnimate[index].type === 'Fold' ? 300 :
-                      actionsToAnimate[index].type === 'Call' ? 500 : 800;
+        const actionType = actionsToAnimate[index].type;
+        const delay = (actionType === 'Fold' || actionType === 'Limp') ? speeds.fold :
+                      actionType === 'Call' ? speeds.call : speeds.raise;
         index++;
         setTimeout(animateNext, delay);
       } else {
@@ -78,8 +114,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       }
     };
 
-    setTimeout(animateNext, 500); // Initial delay before animation starts
-  }, []);
+    setTimeout(animateNext, speeds.initial);
+  }, [speed]);
 
   // Start a new hand
   const nextHand = useCallback(() => {
@@ -94,14 +130,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     setCurrentActionIndex(-1);
     setShowHeroHighlight(false);
 
-    const actionSequence = buildActionSequence(scenario);
+    const { actions: actionSequence, types } = buildActionSequence(scenario);
     setActions(actionSequence);
+    setPlayerTypes(types);
 
     // Start animation after a short delay
+    const speeds = SPEED_SETTINGS[speed];
     setTimeout(() => {
       animateActions(actionSequence);
-    }, 300);
-  }, [getRandomScenario, buildActionSequence, animateActions]);
+    }, speeds.initial / 2);
+  }, [getRandomScenario, buildActionSequence, animateActions, speed]);
 
   // Initialize on mount or when scenarios change
   useEffect(() => {
@@ -146,8 +184,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
     }));
     setStreak(prev => isCorrect ? prev + 1 : 0);
 
-    // Auto-advance after delay
-    setTimeout(nextHand, isCorrect ? 1200 : 2000);
+    // Auto-advance after delay based on speed
+    const speeds = SPEED_SETTINGS[speed];
+    const feedbackTime = isCorrect ? speeds.feedback * 0.6 : speeds.feedback;
+    setTimeout(nextHand, feedbackTime);
   };
 
   const getActionButtons = () => {
@@ -256,6 +296,23 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         <button className="back-btn" onClick={onBack}>
           ← Back
         </button>
+        <div className="speed-control">
+          <span className="speed-label">Speed:</span>
+          <div className="speed-buttons">
+            <button
+              className={`speed-btn ${speed === 'normal' ? 'active' : ''}`}
+              onClick={() => setSpeed('normal')}
+            >1x</button>
+            <button
+              className={`speed-btn ${speed === 'fast' ? 'active' : ''}`}
+              onClick={() => setSpeed('fast')}
+            >2x</button>
+            <button
+              className={`speed-btn ${speed === 'faster' ? 'active' : ''}`}
+              onClick={() => setSpeed('faster')}
+            >3x</button>
+          </div>
+        </div>
         <div className="score-display">
           <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
           <span className={`streak ${streak >= 5 ? 'hot' : ''}`}>
@@ -273,6 +330,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         currentActionIndex={currentActionIndex}
         showHeroHighlight={showHeroHighlight && userAnswer === null}
         blinds={blinds}
+        playerTypes={playerTypes}
       />
 
       <div className="situation-description">

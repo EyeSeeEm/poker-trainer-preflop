@@ -22,6 +22,16 @@ const POSITION_ALIASES = {
   'BB': 'BB'
 };
 
+// Player type display info
+const PLAYER_TYPE_INFO = {
+  'fish': { label: 'Fish', color: '#3498db', icon: '🐟' },
+  'aggro': { label: 'Aggro', color: '#e74c3c', icon: '🔥' },
+  'passive': { label: 'Passive', color: '#95a5a6', icon: '🐢' },
+  'tight': { label: 'Tight', color: '#9b59b6', icon: '🔒' },
+  'pro': { label: 'Pro', color: '#f1c40f', icon: '⭐' },
+  'reg': { label: 'Reg', color: '#1abc9c', icon: '📊' }
+};
+
 export default function PokerTable({
   heroPosition,
   dealerPosition,
@@ -29,7 +39,8 @@ export default function PokerTable({
   currentActionIndex = -1,
   showHeroHighlight = false,
   blinds = { sb: 5, bb: 5 },
-  bets = {} // { position: amount }
+  bets = {}, // { position: amount }
+  playerTypes = {} // { position: 'fish' | 'aggro' | 'passive' | 'tight' | 'pro' | 'reg' }
 }) {
   // Normalize hero position
   const normalizedHero = POSITION_ALIASES[heroPosition] || 'BTN';
@@ -155,6 +166,10 @@ export default function PokerTable({
               const betX = 50 + betRadiusX * Math.sin(radians);
               const betY = 50 - betRadiusY * Math.cos(radians);
 
+              // Get player type for this seat
+              const playerType = playerTypes[seat.id];
+              const typeInfo = playerType ? PLAYER_TYPE_INFO[playerType] : null;
+
               return (
                 <React.Fragment key={seat.id}>
                   {/* Bet/Chips in front of player */}
@@ -178,10 +193,15 @@ export default function PokerTable({
                     style={{ left: `${x}%`, top: `${y}%` }}
                   >
                     <div className="seat-avatar">
-                      {isHero ? '👤' : '👤'}
+                      {isHero ? '👤' : (typeInfo ? typeInfo.icon : '👤')}
                     </div>
                     <div className="seat-info">
                       <span className="seat-label">{seat.label}</span>
+                      {typeInfo && !isHero && (
+                        <span className="player-type" style={{ color: typeInfo.color }}>
+                          {typeInfo.label}
+                        </span>
+                      )}
                       <span className="seat-stack">${blinds.bb * 100}</span>
                     </div>
                     {isVisible && action && (

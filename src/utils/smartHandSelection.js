@@ -4,6 +4,40 @@ import { getCorrectAction } from './rangeLogic';
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const RANK_VALUES = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
 
+// Obvious hands that are always in range for specific actions - not interesting to test
+const OBVIOUS_OPEN_HANDS = new Set([
+  'AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'KQs'
+]);
+
+const OBVIOUS_3BET_HANDS = new Set([
+  'AA', 'KK', 'QQ', 'AKs', 'AKo'
+]);
+
+const OBVIOUS_4BET_HANDS = new Set([
+  'AA', 'KK', 'AKs', 'AKo'
+]);
+
+const OBVIOUS_5BET_HANDS = new Set([
+  'AA', 'KK'
+]);
+
+// Get the obvious hands set for a given category
+function getObviousHands(category) {
+  switch (category) {
+    case 'open_ranges':
+      return OBVIOUS_OPEN_HANDS;
+    case 'vs_open_ranges':
+      return OBVIOUS_3BET_HANDS;
+    case 'vs_3bet_ranges':
+    case 'cold_4bet_ranges':
+      return OBVIOUS_4BET_HANDS;
+    case 'vs_4bet_ranges':
+      return OBVIOUS_5BET_HANDS;
+    default:
+      return new Set();
+  }
+}
+
 // Parse a hand string into components
 function parseHand(hand) {
   if (hand.length === 2) {
@@ -100,20 +134,84 @@ function findBoundaryFoldHands(category, scenario, allHands) {
   return boundaryHands;
 }
 
+// Find hands that are near the range boundary (interesting raise/call hands)
+function findBoundaryInRangeHands(category, scenario, allHands) {
+  const inRangeHands = [];
+  const foldHands = [];
+  const obviousHands = getObviousHands(category);
+
+  allHands.forEach(hand => {
+    const action = getCorrectAction(hand, category, scenario);
+    if (action === 'Fold') {
+      foldHands.push(hand);
+    } else {
+      inRangeHands.push(hand);
+    }
+  });
+
+  // If no fold hands, all in-range hands are equally valid
+  if (foldHands.length === 0) {
+    return inRangeHands.filter(h => !obviousHands.has(h));
+  }
+
+  // Score each in-range hand by its minimum distance to any fold hand
+  const scoredHands = inRangeHands.map(rangeHand => {
+    // Skip obvious hands
+    if (obviousHands.has(rangeHand)) {
+      return { hand: rangeHand, distance: Infinity, isObvious: true };
+    }
+
+    let minDistance = Infinity;
+    foldHands.forEach(foldHand => {
+      const dist = handDistance(rangeHand, foldHand);
+      if (dist < minDistance) {
+        minDistance = dist;
+      }
+    });
+    return { hand: rangeHand, distance: minDistance, isObvious: false };
+  });
+
+  // Sort by distance (closest to boundary first)
+  scoredHands.sort((a, b) => a.distance - b.distance);
+
+  // Return non-obvious hands within distance 4 of fold hands (boundary hands)
+  const boundaryHands = scoredHands
+    .filter(h => !h.isObvious && h.distance <= 4)
+    .map(h => h.hand);
+
+  // If not enough boundary hands, include more
+  if (boundaryHands.length < 15) {
+    const additionalHands = scoredHands
+      .filter(h => !h.isObvious && h.distance > 4)
+      .map(h => h.hand);
+    return [...boundaryHands, ...additionalHands];
+  }
+
+  return boundaryHands;
+}
+
 // Get a smart random hand for a scenario
-// This ensures fold hands are interesting (near the boundary)
+// This ensures hands are interesting (near the boundary), avoiding obvious plays
 export function getSmartRandomHand(category, scenario) {
   const allHands = generateAllHands();
+  const obviousHands = getObviousHands(category);
 
-  // 70% chance to show a hand that's in range (raise/call)
-  // 30% chance to show a fold hand (but a challenging one)
-  const showInRangeHand = Math.random() < 0.7;
+  // 65% chance to show a hand that's in range (raise/call)
+  // 35% chance to show a fold hand (but a challenging one)
+  const showInRangeHand = Math.random() < 0.65;
 
   if (showInRangeHand) {
-    // Get hands that are not folds
+    // Get boundary in-range hands (interesting ones near the fold boundary)
+    const boundaryInRange = findBoundaryInRangeHands(category, scenario, allHands);
+
+    if (boundaryInRange.length > 0) {
+      return boundaryInRange[Math.floor(Math.random() * boundaryInRange.length)];
+    }
+
+    // Fallback: any non-obvious in-range hand
     const inRangeHands = allHands.filter(hand => {
       const action = getCorrectAction(hand, category, scenario);
-      return action !== 'Fold';
+      return action !== 'Fold' && !obviousHands.has(hand);
     });
 
     if (inRangeHands.length > 0) {
@@ -128,6 +226,11 @@ export function getSmartRandomHand(category, scenario) {
     return boundaryFolds[Math.floor(Math.random() * boundaryFolds.length)];
   }
 
-  // Fallback to any hand
+  // Fallback to any non-obvious hand
+  const nonObviousHands = allHands.filter(h => !obviousHands.has(h));
+  if (nonObviousHands.length > 0) {
+    return nonObviousHands[Math.floor(Math.random() * nonObviousHands.length)];
+  }
+
   return allHands[Math.floor(Math.random() * allHands.length)];
 }
