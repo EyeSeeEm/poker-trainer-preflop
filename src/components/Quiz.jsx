@@ -101,7 +101,6 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
   const [userAnswer, setUserAnswer] = useState(null);
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [streak, setStreak] = useState(0);
   const [actions, setActions] = useState([]);
   const [currentActionIndex, setCurrentActionIndex] = useState(-1);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -420,7 +419,6 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       correct: prev.correct + (isCorrect ? 1 : 0),
       total: prev.total + 1
     }));
-    setStreak(prev => isCorrect ? prev + 1 : 0);
 
     // Create history entry with full details for analysis
     const historyEntry = {
@@ -553,6 +551,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
         <button className="back-btn" onClick={onBack}>
           ← Back
         </button>
+        <div className="score-display">
+          <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
+        </div>
         <div className="header-actions">
           <button
             className={`history-btn ${handHistory.length > 0 ? 'has-history' : ''}`}
@@ -569,12 +570,6 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
           >
             <span className="hamburger-icon">☰</span>
           </button>
-        </div>
-        <div className="score-display">
-          <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
-          <span className={`streak ${streak >= 5 ? 'hot' : ''}`}>
-            🔥 {streak}
-          </span>
         </div>
       </div>
 
