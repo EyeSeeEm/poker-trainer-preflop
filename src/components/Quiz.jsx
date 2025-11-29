@@ -124,7 +124,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       // Show villain's opening raise first
       actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
       // Then hero's 3bet
-      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet', isHeroAction: true });
+      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet 9BB', isHeroAction: true });
     }
 
     // Add villain actions based on scenario type
@@ -132,9 +132,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
       if (mapping.villainAction === 'open') {
         actions.push({ position: mapping.villain, type: 'Raise', text: 'Raise 2.5BB' });
       } else if (mapping.villainAction === '3bet') {
-        actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet' });
+        actions.push({ position: mapping.villain, type: '3bet', text: '3-Bet 9BB' });
       } else if (mapping.villainAction === '4bet') {
-        actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet' });
+        actions.push({ position: mapping.villain, type: '4bet', text: '4-Bet 22BB' });
       }
       if (mapping.villainType) {
         types[mapping.villain] = mapping.villainType;
@@ -143,7 +143,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, onBack }) {
 
     // Add second villain for cold 4bet scenarios
     if (mapping.villain2) {
-      actions.push({ position: mapping.villain2, type: mapping.villain2Action, text: mapping.villain2Action === '3bet' ? '3-Bet' : mapping.villain2Action });
+      const actionText = mapping.villain2Action === '3bet' ? '3-Bet 9BB' :
+                        mapping.villain2Action === '4bet' ? '4-Bet 22BB' : mapping.villain2Action;
+      actions.push({ position: mapping.villain2, type: mapping.villain2Action, text: actionText });
       if (mapping.villain2Type) {
         types[mapping.villain2] = mapping.villain2Type;
       }

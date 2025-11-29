@@ -129,14 +129,16 @@ export default function PokerTable({
               <span className="pot-amount">${calculatePot()}</span>
             </div>
 
-            {/* Dealer button - positioned based on BTN seat */}
+            {/* Dealer button - positioned to the side of BTN seat */}
             {SEAT_POSITIONS.map(seat => {
               if (seat.id !== getDealerSeat()) return null;
 
+              // Position dealer button to the right side of the BTN seat
               const adjustedAngle = seat.angle + rotationOffset;
-              const radians = (adjustedAngle * Math.PI) / 180;
-              const radiusX = 28;
-              const radiusY = 24;
+              const sideOffsetAngle = adjustedAngle - 25; // Offset to the right
+              const radians = (sideOffsetAngle * Math.PI) / 180;
+              const radiusX = 38;
+              const radiusY = 34;
               const x = 50 + radiusX * Math.sin(radians);
               const y = 50 - radiusY * Math.cos(radians);
 
