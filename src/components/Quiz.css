@@ -41,6 +41,13 @@
   margin-bottom: 15px;
 }
 
+/* Left side container - matches right side width for centering */
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 92px; /* Match header-actions width (2 buttons + gap) */
+}
+
 .back-btn {
   display: flex;
   align-items: center;
@@ -66,7 +73,9 @@
 .header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  min-width: 92px; /* 42px + 8px gap + 42px */
 }
 
 .settings-btn {
@@ -93,9 +102,66 @@
   color: #a0b0c0;
 }
 
+/* Analysis Button */
+.analysis-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: #1e2a38;
+  border: 2px solid #3a4a5a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.analysis-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.analysis-btn.ready {
+  border-color: #f39c12;
+  animation: analysis-pulse 2s ease-in-out infinite;
+}
+
+.analysis-btn.ready:hover {
+  background: #2a3a4a;
+  border-color: #f5b041;
+}
+
+@keyframes analysis-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(243, 156, 18, 0); }
+}
+
+.analysis-icon {
+  font-size: 18px;
+}
+
+.analysis-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
 /* Settings Panel */
 .settings-panel,
-.history-panel {
+.history-panel,
+.analysis-panel {
   background: #1e2a38;
   border: 1px solid #3a4a5a;
   border-radius: 12px;
@@ -327,6 +393,178 @@
 @keyframes pulse-danger {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
+}
+
+/* Analysis Panel */
+.analysis-panel {
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* Needed for flex overflow */
+}
+
+.analysis-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3a4a5a;
+}
+
+.analysis-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e0e0e0;
+  flex: 1;
+  text-align: center;
+}
+
+.analysis-overview {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 10px;
+  background: #0d1520;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.analysis-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.analysis-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.analysis-stat-value.correct {
+  color: #2ecc71;
+}
+
+.analysis-stat-value.incorrect {
+  color: #e74c3c;
+}
+
+.analysis-stat-label {
+  font-size: 11px;
+  color: #8a9aa9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analysis-section {
+  margin-bottom: 15px;
+}
+
+.analysis-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a0b0c0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analysis-empty {
+  padding: 20px;
+  text-align: center;
+  color: #8a9aa9;
+  font-size: 13px;
+}
+
+.analysis-leaks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-leak-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #0d1520;
+  border-radius: 8px;
+  border-left: 3px solid #3a4a5a;
+}
+
+.analysis-leak-item.high-error {
+  border-left-color: #e74c3c;
+}
+
+.analysis-leak-item.medium-error {
+  border-left-color: #f39c12;
+}
+
+.analysis-leak-item.low-error {
+  border-left-color: #2ecc71;
+}
+
+.leak-rank {
+  width: 24px;
+  height: 24px;
+  background: #2a3a4a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a9aa9;
+  flex-shrink: 0;
+}
+
+.leak-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.leak-scenario {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.leak-stats {
+  font-size: 11px;
+  color: #8a9aa9;
+}
+
+.leak-indicator {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.analysis-done-btn {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #3498db;
+  color: white;
+  transition: all 0.2s ease;
+  margin-top: 15px;
+  flex-shrink: 0; /* Never shrink the button */
+}
+
+.analysis-done-btn:hover {
+  background: #2980b9;
 }
 
 /* History Panel */

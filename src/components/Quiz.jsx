@@ -57,13 +57,17 @@ const CARD_SIZES = ['small', 'medium', 'large'];
 // Number of recent hands to show in overview
 const RECENT_HANDS_LIMIT = 5;
 
-// Overview structure: { totalHands, correct, incorrect, recentHandIds: [id1, id2, ...], nextHandId }
+// Minimum hands required for analysis
+const ANALYSIS_THRESHOLD = 20;
+
+// Overview structure: { totalHands, correct, incorrect, recentHandIds: [id1, id2, ...], nextHandId, lastAnalysisHandId }
 const getDefaultOverview = () => ({
   totalHands: 0,
   correct: 0,
   incorrect: 0,
   recentHandIds: [], // Last 5 hand IDs for quick display
-  nextHandId: 1
+  nextHandId: 1,
+  lastAnalysisHandId: 0 // Track when last analysis was done
 });
 
 // Load HH overview (stats + recent hand IDs)
@@ -71,7 +75,12 @@ const loadHistoryOverview = () => {
   try {
     const stored = localStorage.getItem(HISTORY_OVERVIEW_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Ensure lastAnalysisHandId exists (for backwards compatibility)
+      if (parsed.lastAnalysisHandId === undefined) {
+        parsed.lastAnalysisHandId = 0;
+      }
+      return parsed;
     }
   } catch (e) {
     console.error('Failed to load HH overview:', e);
@@ -162,6 +171,102 @@ const clearAllHistory = () => {
 
   // Reset overview
   saveHistoryOverview(getDefaultOverview());
+};
+
+// Load hands since last analysis for leak detection
+const loadHandsForAnalysis = (overview) => {
+  const hands = [];
+  const startId = (overview.lastAnalysisHandId || 0) + 1;
+  const endId = overview.nextHandId;
+
+  for (let i = startId; i < endId; i++) {
+    const hand = loadHandById(i);
+    if (hand) {
+      hands.push({ ...hand, id: i });
+    }
+  }
+  return hands;
+};
+
+// Analyze hands to find leaks - returns stats grouped by scenario and category
+const analyzeLeaks = (hands) => {
+  if (!hands || hands.length === 0) return null;
+
+  // Group by scenario
+  const scenarioStats = {};
+  const categoryStats = {};
+
+  hands.forEach(hand => {
+    // By scenario
+    const scenarioKey = hand.scenarioKey || hand.scenario;
+    if (!scenarioStats[scenarioKey]) {
+      scenarioStats[scenarioKey] = {
+        label: hand.scenario,
+        total: 0,
+        correct: 0,
+        incorrect: 0,
+        mistakes: []
+      };
+    }
+    scenarioStats[scenarioKey].total++;
+    if (hand.isCorrect) {
+      scenarioStats[scenarioKey].correct++;
+    } else {
+      scenarioStats[scenarioKey].incorrect++;
+      scenarioStats[scenarioKey].mistakes.push({
+        hand: hand.hand,
+        userAnswer: hand.userAnswer,
+        correctAnswer: hand.correctAnswer
+      });
+    }
+
+    // By category
+    const category = hand.category || 'unknown';
+    if (!categoryStats[category]) {
+      categoryStats[category] = { total: 0, correct: 0, incorrect: 0 };
+    }
+    categoryStats[category].total++;
+    if (hand.isCorrect) {
+      categoryStats[category].correct++;
+    } else {
+      categoryStats[category].incorrect++;
+    }
+  });
+
+  // Sort scenarios by error rate (worst first)
+  const sortedScenarios = Object.entries(scenarioStats)
+    .map(([key, stats]) => ({
+      key,
+      ...stats,
+      errorRate: stats.total > 0 ? (stats.incorrect / stats.total) * 100 : 0
+    }))
+    .filter(s => s.total >= 3) // Only show scenarios with enough data
+    .sort((a, b) => b.errorRate - a.errorRate);
+
+  // Overall stats
+  const totalHands = hands.length;
+  const totalCorrect = hands.filter(h => h.isCorrect).length;
+  const totalIncorrect = totalHands - totalCorrect;
+  const overallAccuracy = totalHands > 0 ? (totalCorrect / totalHands) * 100 : 0;
+
+  return {
+    totalHands,
+    totalCorrect,
+    totalIncorrect,
+    overallAccuracy,
+    scenarios: sortedScenarios,
+    categories: categoryStats
+  };
+};
+
+// Mark analysis as done (update lastAnalysisHandId)
+const markAnalysisDone = (overview) => {
+  const updatedOverview = {
+    ...overview,
+    lastAnalysisHandId: overview.nextHandId - 1
+  };
+  saveHistoryOverview(updatedOverview);
+  return updatedOverview;
 };
 
 // Migrate from old format to new format
@@ -271,11 +376,18 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [copySuccess, setCopySuccess] = useState(false);
   const [showHandChart, setShowHandChart] = useState(false); // Show hand chart cheat sheet
   const [showHHHandChart, setShowHHHandChart] = useState(false); // Show hand chart in HH detail
+  const [showAnalysis, setShowAnalysis] = useState(false); // Show analysis panel
+  const [analysisData, setAnalysisData] = useState(null); // Cached analysis results
   const animationIdRef = useRef(0); // Track current animation to cancel stale ones
   const historyPanelRef = useRef(null); // Ref for click outside detection
   const settingsPanelRef = useRef(null); // Ref for click outside detection
   const handChartRef = useRef(null); // Ref for hand chart click outside detection
   const hhHandChartRef = useRef(null); // Ref for HH hand chart click outside detection
+  const analysisPanelRef = useRef(null); // Ref for analysis panel click outside detection
+
+  // Calculate hands since last analysis
+  const handsSinceLastAnalysis = (historyOverview.nextHandId - 1) - (historyOverview.lastAnalysisHandId || 0);
+  const canAnalyze = handsSinceLastAnalysis >= ANALYSIS_THRESHOLD;
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -574,11 +686,17 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
           setShowHHHandChart(false);
         }
       }
+      // Close analysis panel when clicking outside
+      if (showAnalysis && analysisPanelRef.current && !analysisPanelRef.current.contains(e.target)) {
+        if (!e.target.closest('.analysis-btn')) {
+          setShowAnalysis(false);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showHistory, showSettings, showHandChart, showHHHandChart]);
+  }, [showHistory, showSettings, showHandChart, showHHHandChart, showAnalysis]);
 
   const handleAnswer = (answer) => {
     if (userAnswer !== null || isAnimating || !showHeroHighlight) return;
@@ -791,9 +909,11 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   return (
     <div className={`quiz ${userAnswer !== null ? (correctAnswer && correctAnswer.split('/').includes(userAnswer) ? 'result-correct' : 'result-incorrect') : ''}`}>
       <div className="quiz-header">
-        <button className="back-btn" onClick={onBack} title="Back to Menu">
-          ⌂
-        </button>
+        <div className="header-left">
+          <button className="back-btn" onClick={onBack} title="Back to Menu">
+            ⌂
+          </button>
+        </div>
         <button
           className="score-display"
           onClick={() => {
@@ -808,6 +928,23 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
           <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
         </button>
         <div className="header-actions">
+          <button
+            className={`analysis-btn ${canAnalyze ? 'ready' : 'disabled'}`}
+            onClick={() => {
+              if (canAnalyze) {
+                // Load and analyze hands
+                const hands = loadHandsForAnalysis(historyOverview);
+                const analysis = analyzeLeaks(hands);
+                setAnalysisData(analysis);
+                setShowAnalysis(!showAnalysis);
+              }
+            }}
+            disabled={!canAnalyze}
+            title={canAnalyze ? 'View Leak Analysis' : `Play ${ANALYSIS_THRESHOLD - handsSinceLastAnalysis} more hands to unlock analysis`}
+          >
+            <span className="analysis-icon">📊</span>
+            {canAnalyze && <span className="analysis-badge">{handsSinceLastAnalysis}</span>}
+          </button>
           <button
             className="settings-btn"
             onClick={() => setShowSettings(!showSettings)}
@@ -904,6 +1041,80 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               {clearConfirmPending ? 'Click again to confirm' : 'Clear Hand History'}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Analysis Panel */}
+      {showAnalysis && analysisData && (
+        <div className="analysis-panel" ref={analysisPanelRef}>
+          <div className="analysis-panel-header">
+            <button
+              className="close-panel-btn"
+              onClick={() => setShowAnalysis(false)}
+              title="Close Analysis"
+            >
+              ×
+            </button>
+            <h3>Leak Analysis</h3>
+            <div className="header-spacer"></div>
+          </div>
+
+          {/* Scrollable content area */}
+          <div className="analysis-content">
+            {/* Overall stats */}
+            <div className="analysis-overview">
+              <div className="analysis-stat">
+                <span className="analysis-stat-value">{analysisData.totalHands}</span>
+                <span className="analysis-stat-label">Hands Analyzed</span>
+              </div>
+              <div className="analysis-stat">
+                <span className="analysis-stat-value correct">{analysisData.overallAccuracy.toFixed(0)}%</span>
+                <span className="analysis-stat-label">Accuracy</span>
+              </div>
+              <div className="analysis-stat">
+                <span className="analysis-stat-value incorrect">{analysisData.totalIncorrect}</span>
+                <span className="analysis-stat-label">Mistakes</span>
+              </div>
+            </div>
+
+            {/* Leaks by scenario */}
+            <div className="analysis-section">
+              <h4>Scenarios to Work On</h4>
+              {analysisData.scenarios.length === 0 ? (
+                <div className="analysis-empty">Not enough data per scenario yet</div>
+              ) : (
+                <div className="analysis-leaks-list">
+                  {analysisData.scenarios.slice(0, 5).map((scenario, idx) => (
+                    <div key={scenario.key} className={`analysis-leak-item ${scenario.errorRate > 30 ? 'high-error' : scenario.errorRate > 15 ? 'medium-error' : 'low-error'}`}>
+                      <div className="leak-rank">{idx + 1}</div>
+                      <div className="leak-info">
+                        <span className="leak-scenario">{scenario.label}</span>
+                        <span className="leak-stats">
+                          {scenario.incorrect}/{scenario.total} wrong ({scenario.errorRate.toFixed(0)}% error rate)
+                        </span>
+                      </div>
+                      <div className="leak-indicator">
+                        {scenario.errorRate > 30 ? '🔴' : scenario.errorRate > 15 ? '🟡' : '🟢'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mark as reviewed button - always visible at bottom */}
+          <button
+            className="analysis-done-btn"
+            onClick={() => {
+              const updatedOverview = markAnalysisDone(historyOverview);
+              setHistoryOverview(updatedOverview);
+              setShowAnalysis(false);
+              setAnalysisData(null);
+            }}
+          >
+            Mark as Reviewed
+          </button>
         </div>
       )}
 
