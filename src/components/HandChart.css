@@ -1,0 +1,170 @@
+/* Hand Chart Container */
+.hand-chart-container {
+  background: #1a2634;
+  border: 1px solid #3a4a5a;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  width: 420px;
+}
+
+.hand-chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e0e8f0;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* 13x13 Grid */
+.hand-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 2px;
+  background: #0d1520;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+/* Individual cell */
+.hand-chart-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 2px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: default;
+  min-width: 29px;
+  min-height: 29px;
+}
+
+.hand-chart-cell:hover {
+  transform: scale(1.15);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hand-notation {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Action colors */
+.hand-chart-cell.raise {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+}
+
+.hand-chart-cell.call {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.hand-chart-cell.fold {
+  background: linear-gradient(135deg, #5a6a7a 0%, #3a4a5a 100%);
+}
+
+.hand-chart-cell.fold .hand-notation {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Mixed hands - diagonal split (styled via inline style) */
+.hand-chart-cell.mixed-split {
+  /* Background set via inline style */
+}
+
+.hand-chart-cell.mixed-split .hand-notation {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Legend */
+.hand-chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.legend-item.raise .legend-color {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+}
+
+.legend-item.call .legend-color {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.legend-item.fold .legend-color {
+  background: linear-gradient(135deg, #5a6a7a 0%, #3a4a5a 100%);
+}
+
+.legend-label {
+  font-size: 12px;
+  color: #a0b0c0;
+}
+
+/* Hover tooltip wrapper - used in Quiz.jsx */
+.scenario-label-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.scenario-label-wrapper .hand-chart-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+}
+
+.scenario-label-wrapper:hover .hand-chart-tooltip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Detail view in HH panel - keep scenario centered */
+.detail-scenario-wrapper {
+  justify-content: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .hand-chart-container {
+    width: 95vw;
+    max-width: 420px;
+    padding: 8px;
+  }
+
+  .hand-chart-cell {
+    font-size: 8px;
+    min-width: 22px;
+    min-height: 22px;
+  }
+
+  .hand-chart-grid {
+    gap: 1px;
+  }
+}

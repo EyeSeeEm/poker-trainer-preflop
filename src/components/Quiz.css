@@ -311,7 +311,7 @@
 /* History Panel */
 .history-panel {
   max-height: 845px;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
@@ -575,8 +575,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-y: auto;
-  max-height: 715px;
+  overflow: visible;
 }
 
 .detail-hand-info {

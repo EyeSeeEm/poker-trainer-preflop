@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import HandDisplay from './HandDisplay';
 import PokerTable from './PokerTable';
+import HandChart from './HandChart';
 import { getSmartRandomHand } from '../utils/smartHandSelection';
 import { getCorrectAction, isAnswerCorrect, getCorrectActionDisplay } from '../utils/rangeLogic';
 import { SCENARIO_MAPPINGS } from './Settings';
@@ -785,7 +786,15 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                       <div className="detail-hand-display">
                         <HandDisplay hand={item.hand} size="mini" />
                       </div>
-                      <div className="detail-scenario">{item.scenario}</div>
+                      <div className="scenario-label-wrapper detail-scenario-wrapper">
+                        <div className="detail-scenario">{item.scenario}</div>
+                        <div className="hand-chart-tooltip">
+                          <HandChart
+                            category={item.category}
+                            scenarioKey={item.scenarioKey}
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <div className="detail-result-summary">
@@ -934,7 +943,16 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
         </div>
       )}
 
-      <div className="scenario-label">{currentScenario.label}</div>
+      <div className="scenario-label-wrapper">
+        <div className="scenario-label">{currentScenario.label}</div>
+        <div className="hand-chart-tooltip">
+          <HandChart
+            category={currentScenario.category}
+            scenarioKey={currentScenario.key}
+            title={currentScenario.label}
+          />
+        </div>
+      </div>
 
       <PokerTable
         heroPosition={getHeroPosition()}
