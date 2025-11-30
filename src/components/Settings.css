@@ -41,6 +41,8 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   transition: transform 0.3s ease;
+  cursor: pointer;
+  user-select: none;
 }
 
 .deco-card::before {
@@ -78,12 +80,45 @@
   z-index: 2;
 }
 
-.hero-section:hover .deco-card.card-1 {
-  transform: rotate(-12deg) translateY(0);
+/* Wiggle animations */
+@keyframes wiggle-small {
+  0%, 100% { transform: rotate(var(--base-rotate)) translateY(var(--base-y)); }
+  25% { transform: rotate(calc(var(--base-rotate) - 3deg)) translateY(var(--base-y)); }
+  75% { transform: rotate(calc(var(--base-rotate) + 3deg)) translateY(var(--base-y)); }
 }
 
-.hero-section:hover .deco-card.card-2 {
-  transform: rotate(12deg) translateY(0);
+@keyframes wiggle-big {
+  0%, 100% { transform: rotate(var(--base-rotate)) translateY(var(--base-y)); }
+  10% { transform: rotate(calc(var(--base-rotate) - 15deg)) translateY(calc(var(--base-y) - 5px)); }
+  30% { transform: rotate(calc(var(--base-rotate) + 12deg)) translateY(var(--base-y)); }
+  50% { transform: rotate(calc(var(--base-rotate) - 10deg)) translateY(calc(var(--base-y) - 3px)); }
+  70% { transform: rotate(calc(var(--base-rotate) + 8deg)) translateY(var(--base-y)); }
+  90% { transform: rotate(calc(var(--base-rotate) - 4deg)) translateY(var(--base-y)); }
+}
+
+.deco-card.card-1 {
+  --base-rotate: -8deg;
+  --base-y: 5px;
+}
+
+.deco-card.card-2 {
+  --base-rotate: 8deg;
+  --base-y: 5px;
+}
+
+/* Hover wiggle on PC (small) */
+.deco-card:hover {
+  animation: wiggle-small 0.4s ease-in-out;
+}
+
+/* Click/tap wiggle (big) */
+.deco-card.wiggling {
+  animation: wiggle-big 0.5s ease-in-out;
+}
+
+/* Override hover animation when wiggling */
+.deco-card.wiggling:hover {
+  animation: wiggle-big 0.5s ease-in-out;
 }
 
 .settings h1 {

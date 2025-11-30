@@ -143,6 +143,13 @@ export default function Settings({ onStartTraining }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState(
     savedSelections?.difficulty || 'medium'
   );
+  const [wigglingCard, setWigglingCard] = useState(null);
+
+  // Handle card click/tap for wiggle animation
+  const handleCardClick = (cardNum) => {
+    setWigglingCard(cardNum);
+    setTimeout(() => setWigglingCard(null), 500);
+  };
 
   // Save selections to localStorage whenever they change
   useEffect(() => {
@@ -206,8 +213,14 @@ export default function Settings({ onStartTraining }) {
       {/* Hero section with decorative cards */}
       <div className="hero-section">
         <div className="decorative-cards">
-          <div className="deco-card card-1">A<span className="suit spade">♠</span></div>
-          <div className="deco-card card-2">K<span className="suit spade">♠</span></div>
+          <div
+            className={`deco-card card-1 ${wigglingCard === 1 ? 'wiggling' : ''}`}
+            onClick={() => handleCardClick(1)}
+          >A<span className="suit spade">♠</span></div>
+          <div
+            className={`deco-card card-2 ${wigglingCard === 2 ? 'wiggling' : ''}`}
+            onClick={() => handleCardClick(2)}
+          >K<span className="suit spade">♠</span></div>
         </div>
         <h1>ESM's Poker Preflop Trainer</h1>
         <p className="subtitle">Master your preflop ranges</p>
