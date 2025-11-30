@@ -46,31 +46,176 @@ const getPositionsBetween = (openerPos, responderPos) => {
 };
 
 // localStorage keys
-const HISTORY_STORAGE_KEY = 'poker-trainer-history';
+const HISTORY_OVERVIEW_KEY = 'poker-trainer-hh-overview';
+const HISTORY_HAND_PREFIX = 'poker-trainer-hh-';
 const SETTINGS_STORAGE_KEY = 'poker-trainer-settings';
+const OLD_HISTORY_KEY = 'poker-trainer-history'; // For migration
 
 // Card size options
 const CARD_SIZES = ['small', 'medium', 'large'];
 
-// Load persistent history from localStorage
-const loadPersistentHistory = () => {
+// Number of recent hands to show in overview
+const RECENT_HANDS_LIMIT = 5;
+
+// Overview structure: { totalHands, correct, incorrect, recentHandIds: [id1, id2, ...], nextHandId }
+const getDefaultOverview = () => ({
+  totalHands: 0,
+  correct: 0,
+  incorrect: 0,
+  recentHandIds: [], // Last 5 hand IDs for quick display
+  nextHandId: 1
+});
+
+// Load HH overview (stats + recent hand IDs)
+const loadHistoryOverview = () => {
   try {
-    const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+    const stored = localStorage.getItem(HISTORY_OVERVIEW_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.error('Failed to load history from localStorage:', e);
+    console.error('Failed to load HH overview:', e);
   }
-  return [];
+  return getDefaultOverview();
 };
 
-// Save history to localStorage
-const savePersistentHistory = (history) => {
+// Save HH overview
+const saveHistoryOverview = (overview) => {
   try {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    localStorage.setItem(HISTORY_OVERVIEW_KEY, JSON.stringify(overview));
   } catch (e) {
-    console.error('Failed to save history to localStorage:', e);
+    console.error('Failed to save HH overview:', e);
+  }
+};
+
+// Load a single hand by ID
+const loadHandById = (handId) => {
+  try {
+    const stored = localStorage.getItem(HISTORY_HAND_PREFIX + handId);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load hand:', handId, e);
+  }
+  return null;
+};
+
+// Save a single hand
+const saveHand = (handId, handData) => {
+  try {
+    localStorage.setItem(HISTORY_HAND_PREFIX + handId, JSON.stringify(handData));
+  } catch (e) {
+    console.error('Failed to save hand:', handId, e);
+  }
+};
+
+// Load recent hands for display (only the last 5)
+const loadRecentHands = (overview) => {
+  const hands = [];
+  for (const handId of overview.recentHandIds) {
+    const hand = loadHandById(handId);
+    if (hand) {
+      hands.push({ ...hand, id: handId });
+    }
+  }
+  return hands;
+};
+
+// Add a new hand to history
+const addHandToHistory = (handData) => {
+  const overview = loadHistoryOverview();
+  const handId = overview.nextHandId;
+
+  // Save the individual hand
+  saveHand(handId, handData);
+
+  // Update overview
+  overview.totalHands++;
+  if (handData.isCorrect) {
+    overview.correct++;
+  } else {
+    overview.incorrect++;
+  }
+
+  // Add to recent hands (keep only last 5 IDs)
+  overview.recentHandIds.unshift(handId);
+  if (overview.recentHandIds.length > RECENT_HANDS_LIMIT) {
+    overview.recentHandIds = overview.recentHandIds.slice(0, RECENT_HANDS_LIMIT);
+  }
+
+  overview.nextHandId++;
+  saveHistoryOverview(overview);
+
+  return { handId, overview };
+};
+
+// Clear all history
+const clearAllHistory = () => {
+  // Get current overview to find all hand IDs we need to delete
+  const overview = loadHistoryOverview();
+
+  // Delete all individual hands (we only track recent ones, but try to clean up)
+  for (let i = 1; i < overview.nextHandId; i++) {
+    localStorage.removeItem(HISTORY_HAND_PREFIX + i);
+  }
+
+  // Reset overview
+  saveHistoryOverview(getDefaultOverview());
+};
+
+// Migrate from old format to new format
+const migrateOldHistory = () => {
+  try {
+    const oldData = localStorage.getItem(OLD_HISTORY_KEY);
+    if (!oldData) return false;
+
+    const oldHistory = JSON.parse(oldData);
+    if (!Array.isArray(oldHistory) || oldHistory.length === 0) {
+      localStorage.removeItem(OLD_HISTORY_KEY);
+      return false;
+    }
+
+    // Check if we already migrated
+    const existingOverview = loadHistoryOverview();
+    if (existingOverview.totalHands > 0) {
+      // Already have new data, just remove old
+      localStorage.removeItem(OLD_HISTORY_KEY);
+      return false;
+    }
+
+    // Migrate: old history is newest-first, we want to preserve that order
+    let overview = getDefaultOverview();
+
+    // Process all hands (oldest to newest for correct ID assignment)
+    const reversedHistory = [...oldHistory].reverse();
+    for (const hand of reversedHistory) {
+      const handId = overview.nextHandId;
+      saveHand(handId, hand);
+
+      overview.totalHands++;
+      if (hand.isCorrect) {
+        overview.correct++;
+      } else {
+        overview.incorrect++;
+      }
+      overview.nextHandId++;
+    }
+
+    // Set recent hand IDs (last 5, newest first)
+    const totalHands = overview.nextHandId - 1;
+    for (let i = totalHands; i > Math.max(0, totalHands - RECENT_HANDS_LIMIT); i--) {
+      overview.recentHandIds.push(i);
+    }
+
+    saveHistoryOverview(overview);
+    localStorage.removeItem(OLD_HISTORY_KEY);
+
+    console.log(`Migrated ${oldHistory.length} hands to new format`);
+    return true;
+  } catch (e) {
+    console.error('Failed to migrate old history:', e);
+    return false;
   }
 };
 
@@ -113,9 +258,14 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [playerColors, setPlayerColors] = useState(() => loadSettings().playerColors || 'type');
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [handHistory, setHandHistory] = useState(() => loadPersistentHistory()); // Persistent history
+  const [historyOverview, setHistoryOverview] = useState(() => {
+    migrateOldHistory(); // Migrate old data if exists
+    return loadHistoryOverview();
+  });
+  const [recentHands, setRecentHands] = useState(() => loadRecentHands(loadHistoryOverview()));
   const [nextToActPosition, setNextToActPosition] = useState(null);
-  const [selectedHistoryIndex, setSelectedHistoryIndex] = useState(null); // For detail view
+  const [selectedHandId, setSelectedHandId] = useState(null); // For detail view - now stores hand ID
+  const [selectedHandData, setSelectedHandData] = useState(null); // Loaded hand data for detail view
   const [clearConfirmPending, setClearConfirmPending] = useState(false); // Two-click clear confirmation
   const [detailViewMode, setDetailViewMode] = useState('visual'); // 'visual' or 'text'
   const [copySuccess, setCopySuccess] = useState(false);
@@ -402,7 +552,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
         // Check if click was on the score-display button itself
         if (!e.target.closest('.score-display')) {
           setShowHistory(false);
-          setSelectedHistoryIndex(null);
+          setSelectedHandId(null);
+          setSelectedHandData(null);
         }
       }
       if (showSettings && settingsPanelRef.current && !settingsPanelRef.current.contains(e.target)) {
@@ -459,11 +610,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       playerTypes: { ...playerTypes } // Store player types for display
     };
 
-    // Record in persistent history and save to localStorage
-    setHandHistory(prev => {
-      const newHistory = [historyEntry, ...prev];
-      savePersistentHistory(newHistory);
-      return newHistory;
+    // Save to new storage system (individual hand + update overview)
+    const { handId, overview } = addHandToHistory(historyEntry);
+    setHistoryOverview(overview);
+    // Update recent hands list (add new hand to front, keep max 5)
+    setRecentHands(prev => {
+      const newRecent = [{ ...historyEntry, id: handId }, ...prev];
+      return newRecent.slice(0, RECENT_HANDS_LIMIT);
     });
 
     // Auto-advance after delay based on speed
@@ -645,7 +798,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
           className="score-display"
           onClick={() => {
             if (!showHistory) {
-              setSelectedHistoryIndex(null); // Reset to overview when opening
+              setSelectedHandId(null); // Reset to overview when opening
+              setSelectedHandData(null);
             }
             setShowHistory(!showHistory);
           }}
@@ -734,8 +888,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               onClick={() => {
                 if (clearConfirmPending) {
                   // Second click - actually clear
-                  setHandHistory([]);
-                  savePersistentHistory([]);
+                  clearAllHistory();
+                  setHistoryOverview(getDefaultOverview());
+                  setRecentHands([]);
                   setClearConfirmPending(false);
                   setScore({ correct: 0, total: 0 });
                 } else {
@@ -756,11 +911,11 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       {showHistory && (
         <div className="history-panel" ref={historyPanelRef}>
           <div className="history-panel-header">
-            {selectedHistoryIndex !== null ? (
+            {selectedHandId !== null ? (
               <>
                 <button
                   className="close-detail-btn"
-                  onClick={() => setSelectedHistoryIndex(null)}
+                  onClick={() => { setSelectedHandId(null); setSelectedHandData(null); }}
                   title="Back to Hand History"
                 >
                   ↩
@@ -768,8 +923,19 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                 <div className="detail-nav-group">
                   <button
                     className="nav-arrow-btn prev"
-                    onClick={() => { setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0)); setShowHHHandChart(false); }}
-                    disabled={selectedHistoryIndex <= 0}
+                    onClick={() => {
+                      // Navigate to newer hand (higher ID)
+                      const newId = selectedHandId + 1;
+                      if (newId < historyOverview.nextHandId) {
+                        const data = loadHandById(newId);
+                        if (data) {
+                          setSelectedHandId(newId);
+                          setSelectedHandData(data);
+                          setShowHHHandChart(false);
+                        }
+                      }
+                    }}
+                    disabled={selectedHandId >= historyOverview.nextHandId - 1}
                     title="Next Hand (Newer)"
                   >
                     ←
@@ -777,8 +943,19 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                   <h3>Hand Details</h3>
                   <button
                     className="nav-arrow-btn next"
-                    onClick={() => { setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1)); setShowHHHandChart(false); }}
-                    disabled={selectedHistoryIndex >= handHistory.length - 1}
+                    onClick={() => {
+                      // Navigate to older hand (lower ID)
+                      const newId = selectedHandId - 1;
+                      if (newId >= 1) {
+                        const data = loadHandById(newId);
+                        if (data) {
+                          setSelectedHandId(newId);
+                          setSelectedHandData(data);
+                          setShowHHHandChart(false);
+                        }
+                      }
+                    }}
+                    disabled={selectedHandId <= 1}
                     title="Previous Hand (Older)"
                   >
                     →
@@ -801,12 +978,11 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
             )}
           </div>
 
-          {selectedHistoryIndex !== null ? (
+          {selectedHandId !== null && selectedHandData ? (
             // Detail view for selected hand
             <div className="history-detail-view">
               {(() => {
-                const item = handHistory[selectedHistoryIndex];
-                if (!item) return null;
+                const item = selectedHandData;
                 return (
                   <>
                     <div className="detail-hand-info">
@@ -911,45 +1087,49 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               })()}
             </div>
           ) : (
-            // Hands list view
+            // Hands list view - shows only last 5 hands from overview
             <>
-              {/* All-time stats */}
-              {handHistory.length > 0 && (
+              {/* All-time stats from overview */}
+              {historyOverview.totalHands > 0 && (
                 <div className="history-stats">
                   <div className="stat-item">
-                    <span className="stat-value">{handHistory.length}</span>
+                    <span className="stat-value">{historyOverview.totalHands}</span>
                     <span className="stat-label">Total Hands</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value correct">
-                      {handHistory.filter(h => h.isCorrect).length}
+                      {historyOverview.correct}
                     </span>
                     <span className="stat-label">Correct</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value incorrect">
-                      {handHistory.filter(h => !h.isCorrect).length}
+                      {historyOverview.incorrect}
                     </span>
                     <span className="stat-label">Mistakes</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value">
-                      {Math.round((handHistory.filter(h => h.isCorrect).length / handHistory.length) * 100)}%
+                      {Math.round((historyOverview.correct / historyOverview.totalHands) * 100)}%
                     </span>
                     <span className="stat-label">Accuracy</span>
                   </div>
                 </div>
               )}
-              <div className="history-section-label">All Hands</div>
-              {handHistory.length === 0 ? (
+              <div className="history-section-label">Recent Hands</div>
+              {recentHands.length === 0 ? (
                 <div className="history-empty">No hands played yet</div>
               ) : (
                 <div className="history-list">
-                  {handHistory.map((item, index) => (
+                  {recentHands.map((item) => (
                     <div
-                      key={index}
+                      key={item.id}
                       className={`history-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
-                      onClick={() => { setSelectedHistoryIndex(index); setShowHHHandChart(false); }}
+                      onClick={() => {
+                        setSelectedHandId(item.id);
+                        setSelectedHandData(item);
+                        setShowHHHandChart(false);
+                      }}
                     >
                       <div className="history-hand">
                         <HandDisplay hand={item.hand} size="mini" />
