@@ -95,17 +95,26 @@ describe('Scenario Mappings - Position Logic', () => {
   });
 
   describe('cold 4bet scenarios', () => {
-    it('cold 4bet has two villains acting before hero', () => {
-      const scenario = SCENARIO_MAPPINGS.cold_4bet_vs_tight;
-      // Villain1 (EP) opens, Villain2 (HJ) 3-bets, Hero (CO/BTN) 4-bets
+    it('OOP cold 4bet has hero in CO', () => {
+      const scenario = SCENARIO_MAPPINGS.oop_cold_4bet_vs_tight;
+      // Villain1 (EP) opens, Villain2 (HJ) 3-bets, Hero (CO) 4-bets
       expect(scenario.villain).toBe('EP');
       expect(scenario.villain2).toBe('HJ');
       expect(scenario.villain2Action).toBe('3bet');
-      // Hero positions are CO/BTN which act after EP and HJ
-      scenario.positions.forEach(heroPos => {
-        expect(actsBefore('EP', heroPos)).toBe(true);
-        expect(actsBefore('HJ', heroPos)).toBe(true);
-      });
+      expect(scenario.positions).toContain('CO');
+      expect(actsBefore('EP', 'CO')).toBe(true);
+      expect(actsBefore('HJ', 'CO')).toBe(true);
+    });
+
+    it('IP cold 4bet has hero on BTN', () => {
+      const scenario = SCENARIO_MAPPINGS.ip_cold_4bet_vs_tight;
+      // Villain1 (EP) opens, Villain2 (HJ) 3-bets, Hero (BTN) 4-bets
+      expect(scenario.villain).toBe('EP');
+      expect(scenario.villain2).toBe('HJ');
+      expect(scenario.villain2Action).toBe('3bet');
+      expect(scenario.positions).toContain('BTN');
+      expect(actsBefore('EP', 'BTN')).toBe(true);
+      expect(actsBefore('HJ', 'BTN')).toBe(true);
     });
   });
 });
@@ -300,7 +309,7 @@ describe('Action Sequence Building', () => {
   });
 
   it('cold_4bet builds correct sequence: v1 opens, v2 3bets', () => {
-    const scenario = SCENARIO_MAPPINGS.cold_4bet_vs_tight;
+    const scenario = SCENARIO_MAPPINGS.oop_cold_4bet_vs_tight;
     const actions = buildActionSequence(scenario);
 
     // Should have 2 actions: villain1 open, villain2 3bet

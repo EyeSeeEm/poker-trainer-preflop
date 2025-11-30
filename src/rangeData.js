@@ -69,11 +69,23 @@ export const rangeData = {
     }
   },
   cold_4bet_ranges: {
-    cold_4bet_vs_tight: {
-      "4bet": ["AA", "KK", "QQ", "AKs", "AKo"]
+    // OOP cold 4bet vs tight (tighter range when out of position)
+    oop_cold_4bet_vs_tight: {
+      "4bet": ["AA", "KK", "QQ", "AKs"]
     },
-    cold_4bet_vs_aggro: {
+    // IP cold 4bet vs tight (can add AKo, JJ when in position)
+    ip_cold_4bet_vs_tight: {
+      "4bet": ["AA", "KK", "QQ", "AKs", "AKo", "JJ"],
+      mixed: ["AKo", "JJ"]
+    },
+    // OOP cold 4bet vs aggro
+    oop_cold_4bet_vs_aggro: {
       "4bet": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "KQs"]
+    },
+    // IP cold 4bet vs aggro (can add AQo, AJs, KJs, A5s when in position)
+    ip_cold_4bet_vs_aggro: {
+      "4bet": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "KQs", "AQo", "AJs", "KJs", "A5s"],
+      mixed: ["AQo", "AJs", "KJs", "A5s"]
     }
   },
   vs_4bet_ranges: {

@@ -70,13 +70,35 @@ describe('Range Logic', () => {
   });
 
   describe('Cold 4bet Ranges', () => {
-    it('should return "4bet" for AA in Cold 4bet vs Tight', () => {
-      const result = getCorrectAction('AA', 'cold_4bet_ranges', 'cold_4bet_vs_tight');
+    it('should return "4bet" for AA in OOP Cold 4bet vs Tight', () => {
+      const result = getCorrectAction('AA', 'cold_4bet_ranges', 'oop_cold_4bet_vs_tight');
       expect(result.action).toBe('4bet');
     });
 
-    it('should return "Fold" for KQs in Cold 4bet vs Tight', () => {
-      const result = getCorrectAction('KQs', 'cold_4bet_ranges', 'cold_4bet_vs_tight');
+    it('should return "Fold" for KQs in OOP Cold 4bet vs Tight', () => {
+      const result = getCorrectAction('KQs', 'cold_4bet_ranges', 'oop_cold_4bet_vs_tight');
+      expect(result.action).toBe('Fold');
+    });
+
+    it('should return "Fold" for JJ in OOP Cold 4bet vs Tight', () => {
+      const result = getCorrectAction('JJ', 'cold_4bet_ranges', 'oop_cold_4bet_vs_tight');
+      expect(result.action).toBe('Fold');
+    });
+
+    it('should return "4bet" for JJ in IP Cold 4bet vs Tight (mixed)', () => {
+      const result = getCorrectAction('JJ', 'cold_4bet_ranges', 'ip_cold_4bet_vs_tight');
+      expect(result.action).toBe('4bet');
+      expect(result.isMixed).toBe(true);
+    });
+
+    it('should return "4bet" for AQo in IP Cold 4bet vs Aggro (mixed)', () => {
+      const result = getCorrectAction('AQo', 'cold_4bet_ranges', 'ip_cold_4bet_vs_aggro');
+      expect(result.action).toBe('4bet');
+      expect(result.isMixed).toBe(true);
+    });
+
+    it('should return "Fold" for AQo in OOP Cold 4bet vs Aggro', () => {
+      const result = getCorrectAction('AQo', 'cold_4bet_ranges', 'oop_cold_4bet_vs_aggro');
       expect(result.action).toBe('Fold');
     });
   });

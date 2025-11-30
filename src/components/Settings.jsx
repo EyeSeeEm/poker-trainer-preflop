@@ -83,9 +83,13 @@ export const SCENARIO_MAPPINGS = {
   ip_vs_passive_3bet: { positions: ['BTN'], situation: 'vs_3bet', label: 'IP vs Passive 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'passive' },
   ip_vs_aggro_3bet: { positions: ['BTN'], situation: 'vs_3bet', label: 'IP vs Aggro 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'aggro' },
 
-  // Cold 4bet Ranges
-  cold_4bet_vs_tight: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
-  cold_4bet_vs_aggro: { positions: ['CO', 'BTN'], situation: 'cold_4bet', label: 'Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
+  // Cold 4bet Ranges - split by IP/OOP
+  // OOP: CO cold 4bets after EP opens, HJ 3bets (CO is OOP vs HJ who 3bet)
+  oop_cold_4bet_vs_tight: { positions: ['CO'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
+  oop_cold_4bet_vs_aggro: { positions: ['CO'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
+  // IP: BTN cold 4bets after EP opens, HJ 3bets (BTN has position on everyone)
+  ip_cold_4bet_vs_tight: { positions: ['BTN'], situation: 'cold_4bet', label: 'IP Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
+  ip_cold_4bet_vs_aggro: { positions: ['BTN'], situation: 'cold_4bet', label: 'IP Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
 
   // Vs 4bet Ranges - split by IP/OOP since position-dependent hands call IP but fold OOP
   // IP scenarios (CO opens, BTN 3bets, CO 4bets - hero is BTN with position on 4bettor)
