@@ -8,7 +8,8 @@ export const rangeData = {
   },
   vs_open_ranges: {
     hj_vs_ep_open: {
-      "3bet": ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "AKs", "AQs", "AJs", "ATs", "A9s", "A5s", "A4s", "A3s", "AKo", "AQo", "KQs", "KJs", "KTs", "QJs", "QTs", "JTs"]
+      "3bet": ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "AKs", "AQs", "AJs", "ATs", "A9s", "A5s", "A4s", "A3s", "AKo", "AQo", "KQs", "KJs", "KTs", "QJs", "QTs", "JTs"],
+      call: []
     },
     btn_vs_aggro_open: {
       "3bet": ["AA", "AKs", "AJs", "ATs", "A9s", "A8s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "KQo", "KJo", "KTo", "QQ", "QJs", "QTs", "JJ", "JTs", "J9s", "TT", "T9s", "33"],
@@ -16,14 +17,14 @@ export const rangeData = {
       mixed: ["A7s", "A6s", "A5s", "A4s", "K6s", "Q9s", "J8s", "T8s", "99", "98s", "88", "87s", "77", "76s", "66", "65s", "55", "54s", "44", "33", "22"]
     },
     btn_vs_passive_open: {
-      "3bet": ["AA", "AJs", "AKo", "KK", "KJs", "QQ", "JJ"],
-      call: ["AKs", "AQs", "ATs", "A5s", "A4s", "KQs", "KTs", "QJs", "JTs", "TT", "T9s", "99", "88", "77", "66", "65s", "55", "54s", "44", "33", "22"],
-      mixed: ["ATs", "KK", "TT"]
+      "3bet": ["AA", "KK", "AKs", "AKo", "AQs", "AJs"],
+      call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "ATs", "A5s", "A4s", "KQs", "KJs", "KTs", "QJs", "JTs", "T9s", "65s", "54s"],
+      mixed: ["AKs", "KK", "QQ", "ATs"]
     },
     bb_vs_passive_open: {
-      "3bet": ["AA", "AJs", "AKo", "AQo", "KK", "QQ", "JJ", "TT"],
-      call: ["AKs", "AQs", "ATs", "A9s", "A5s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "99", "98s", "88", "87s", "86s", "77", "76s", "75s", "66", "65s", "64s", "55", "54s", "53s", "44", "43s", "33", "22"],
-      mixed: ["AJs", "KK", "TT"]
+      "3bet": ["AA", "KK", "AKs", "AKo", "AQs", "AQo", "AJs"],
+      call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "ATs", "A9s", "A5s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "98s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "53s", "43s"],
+      mixed: ["KK", "AKs", "AJs"]
     },
     bb_vs_aggro_open: {
       "3bet": ["AA", "AQs", "ATs", "A7s", "A4s", "AKo", "KK", "KQs", "K9s", "K5s", "K3s", "KQo", "KJo", "QQ", "QTs", "Q8s", "Q6s", "Q4s", "QJo", "JJ", "J9s", "J7s", "JTo", "AJo", "ATo", "KTo", "QTo", "TT", "T8s", "T6s", "A9o", "J9o", "T9o", "99", "97s", "98o", "77", "75s", "66", "64s", "55", "53s", "44", "42s", "33", "22"],
@@ -47,54 +48,54 @@ export const rangeData = {
   },
   vs_3bet_ranges: {
     oop_vs_passive_3bet: {
-      "4bet": ["AA", "AKo", "JJ"],
-      call: ["AKs", "AQs", "AJs", "ATs", "A9s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "Q9s", "JTs", "J9s", "TT", "T9s", "T8s", "99", "98s", "88", "87s", "77", "76s", "66", "65s", "55", "54s", "44", "43s", "33", "22"],
-      mixed: ["AKs", "AJs", "ATs", "KK", "QQ", "TT", "66"]
+      "4bet": ["AA", "KK", "AKs", "AKo"],
+      call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQs", "AJs", "ATs", "A9s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "98s", "87s", "76s", "65s", "54s", "43s"],
+      mixed: ["KK", "AKs", "QQ", "AJs"]
     },
     oop_vs_aggro_3bet: {
-      "4bet": ["AA", "AJs", "ATs", "A5s", "AKo", "AQo", "KK", "KQo", "QQ", "JJ", "TT"],
-      call: ["AKs", "AQs", "A9s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "99", "98s", "88", "87s", "77", "76s", "66", "65s", "55", "54s", "44", "43s", "33", "22"],
-      mixed: ["AJs", "ATs", "A9s", "KJs", "KTs", "QJs", "QTs", "TT", "99"]
+      "4bet": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AJs", "ATs", "A5s", "AKo", "AQo", "KQo"],
+      call: ["AQs", "A9s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "99", "98s", "88", "87s", "77", "76s", "66", "65s", "55", "54s", "44", "43s", "33", "22"],
+      mixed: ["AKs", "AJs", "ATs", "A9s", "KJs", "KTs", "QJs", "QTs", "TT", "99"]
     },
     ip_vs_passive_3bet: {
-      "4bet": ["AA", "A5s", "AKo", "AQo"],
-      call: ["AKs", "AQs", "AJs", "ATs", "A9s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "Q9s", "JJ", "JTs", "J9s", "TT", "T9s", "T8s", "99", "98s", "88", "87s", "77", "76s", "75s", "66", "65s", "64s", "55", "54s", "53s", "44", "43s", "33", "22"],
-      mixed: ["AKs", "ATs", "A9s", "KK", "KJs", "KTs", "TT", "87s"]
+      "4bet": ["AA", "KK", "AKs", "AKo", "AQo", "A5s"],
+      call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQs", "AJs", "ATs", "A9s", "KQs", "KJs", "KTs", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "98s", "87s", "76s", "75s", "65s", "64s", "54s", "53s", "43s"],
+      mixed: ["KK", "AKs", "ATs", "A9s", "KJs", "KTs", "TT", "87s"]
     },
     ip_vs_aggro_3bet: {
-      "4bet": ["AKo"],
-      call: ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "AQo", "KQo", "QQ", "QJs", "QTs", "Q9s", "Q8s", "AJo", "KJo", "QJo", "JJ", "JTs", "J9s", "J8s", "ATo", "TT", "T9s", "T8s", "T7s", "99", "98s", "97s", "96s", "88", "87s", "86s", "77", "76s", "75s", "66", "65s", "64s", "55", "54s", "53s", "44", "43s", "33", "22"],
-      mixed: ["AKo", "A7s", "KQo", "JJ", "87s"]
+      "4bet": ["AA", "KK", "AKs", "AKo"],
+      call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AQo", "AJo", "ATo", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "KQo", "KJo", "QJs", "QTs", "Q9s", "Q8s", "QJo", "JTs", "J9s", "J8s", "T9s", "T8s", "T7s", "98s", "97s", "96s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "53s", "43s"],
+      mixed: ["KK", "AKs", "AKo", "A7s", "KQo", "JJ", "87s"]
     }
   },
   cold_4bet_ranges: {
     cold_4bet_vs_tight: {
-      "4bet": ["AA", "AKs", "AKo", "KK", "QQ", "JJ"]
+      "4bet": ["AA", "KK", "QQ", "AKs", "AKo"]
     },
     cold_4bet_vs_aggro: {
-      "4bet": ["AA", "AKs", "AQs", "AJs", "A5s", "AKo", "KK", "KQs", "KJs", "AQo", "QQ", "JJ", "TT"]
+      "4bet": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "KQs"]
     }
   },
   vs_4bet_ranges: {
-    // IP vs passive 4bet: "mixed" hands (AA, AKo) become calls when IP
-    ip_vs_passive_4bet: {
-      "5bet": [],
-      call: ["AA", "AKs", "AKo", "KK", "QQ", "JJ", "TT"]
-    },
-    // OOP vs passive 4bet: "mixed" hands fold, only pure 5bet/call remain
     oop_vs_passive_4bet: {
-      "5bet": [],
-      call: ["AKs", "KK", "QQ", "JJ", "TT"]
+      "5bet": ["AA", "KK", "AKs"],
+      call: ["QQ", "JJ", "TT", "AKo"],
+      mixed: ["KK", "AKs"]
     },
-    // IP vs aggro 4bet: "mixed" hands (AKo, KK) become calls when IP
+    ip_vs_passive_4bet: {
+      "5bet": ["AA", "AKs"],
+      call: ["KK", "QQ", "JJ", "TT", "AKo"],
+      mixed: ["KK", "AKs"]
+    },
+    oop_vs_aggro_4bet: {
+      "5bet": ["AA", "KK"],
+      call: ["QQ", "AKs", "AKo"],
+      mixed: ["KK"]
+    },
     ip_vs_aggro_4bet: {
       "5bet": ["AA"],
-      call: ["AKs", "AKo", "AQs", "AJs", "KK", "QQ", "JJ", "TT", "87s", "76s", "65s", "54s"]
-    },
-    // OOP vs aggro 4bet: "mixed" hands fold
-    oop_vs_aggro_4bet: {
-      "5bet": ["AA"],
-      call: ["AKs", "AQs", "AJs", "QQ", "JJ", "TT", "87s", "76s", "65s", "54s"]
+      call: ["KK", "QQ", "JJ", "TT", "AKs", "AKo", "87s", "76s", "65s", "54s"],
+      mixed: ["KK", "AKs"]
     }
   }
 };
