@@ -270,11 +270,14 @@ export default function PokerTable({
                 betX = x + 15; // To the right of player (was 12, +3)
                 betY = y - 11; // Above center (was -6, -5)
               } else if (isHorizontalCenter) {
-                // Top/bottom center players - chips below/above them towards center
-                betX = x;
+                // Top/bottom center players
                 if (isTop) {
-                  betY = y + 14; // Move further down for top players to avoid overlap with name
+                  // UTG (top center) - chips to the LEFT of player box so action bubble is visible
+                  betX = x - 14;
+                  betY = y + 8;
                 } else {
+                  // Bottom center (non-hero) - chips above
+                  betX = x;
                   betY = y - 14;
                 }
               } else {
