@@ -73,10 +73,9 @@ export const rangeData = {
     oop_cold_4bet_vs_tight: {
       "4bet": ["AA", "KK", "QQ", "AKs"]
     },
-    // IP cold 4bet vs tight (AA, KK, QQ, AKs, AKo pure 4bet; JJ mixed)
+    // IP cold 4bet vs tight (AA, KK, QQ, AKs, AKo, JJ all pure 4bet when IP)
     ip_cold_4bet_vs_tight: {
-      "4bet": ["AA", "KK", "QQ", "AKs", "AKo", "JJ"],
-      mixed: ["JJ"]
+      "4bet": ["AA", "KK", "QQ", "AKs", "AKo", "JJ"]
     },
     // OOP cold 4bet vs aggro
     oop_cold_4bet_vs_aggro: {

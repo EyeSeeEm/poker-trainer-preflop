@@ -85,10 +85,10 @@ describe('Range Logic', () => {
       expect(result.action).toBe('Fold');
     });
 
-    it('should return "4bet" for JJ in IP Cold 4bet vs Tight (mixed)', () => {
+    it('should return "4bet" for JJ in IP Cold 4bet vs Tight (pure)', () => {
       const result = getCorrectAction('JJ', 'cold_4bet_ranges', 'ip_cold_4bet_vs_tight');
       expect(result.action).toBe('4bet');
-      expect(result.isMixed).toBe(true);
+      expect(result.isMixed).toBe(false);
     });
 
     it('should return "4bet" for AQo in IP Cold 4bet vs Aggro (mixed)', () => {

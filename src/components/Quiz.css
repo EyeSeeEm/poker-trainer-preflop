@@ -272,6 +272,42 @@
   color: white;
 }
 
+/* Clear History Button */
+.setting-group-danger {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #3a4a5a;
+}
+
+.clear-history-btn {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #c0392b;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #1e2a38;
+  color: #e74c3c;
+  transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.clear-history-btn.confirm {
+  background: #c0392b;
+  border-color: #e74c3c;
+  color: white;
+  animation: pulse-danger 1s ease infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
 /* History Panel */
 .history-panel {
   max-height: 845px;

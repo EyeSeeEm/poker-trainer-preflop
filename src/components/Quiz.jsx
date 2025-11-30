@@ -112,10 +112,10 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [playerColors, setPlayerColors] = useState(() => loadSettings().playerColors || 'type');
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [handHistory, setHandHistory] = useState([]); // Session history (recent 50 for display)
+  const [handHistory, setHandHistory] = useState(() => loadPersistentHistory()); // Persistent history
   const [nextToActPosition, setNextToActPosition] = useState(null);
-  const [persistentHistory, setPersistentHistory] = useState(() => loadPersistentHistory());
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState(null); // For detail view
+  const [clearConfirmPending, setClearConfirmPending] = useState(false); // Two-click clear confirmation
   const [detailViewMode, setDetailViewMode] = useState('visual'); // 'visual' or 'text'
   const [copySuccess, setCopySuccess] = useState(false);
   const animationIdRef = useRef(0); // Track current animation to cancel stale ones
@@ -441,11 +441,8 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       playerTypes: { ...playerTypes } // Store player types for display
     };
 
-    // Record in session history (last 50 for display)
-    setHandHistory(prev => [historyEntry, ...prev].slice(0, 50));
-
-    // Save to persistent history (all entries)
-    setPersistentHistory(prev => {
+    // Record in persistent history and save to localStorage
+    setHandHistory(prev => {
       const newHistory = [historyEntry, ...prev];
       savePersistentHistory(newHistory);
       return newHistory;
@@ -712,6 +709,28 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               >Off</button>
             </div>
           </div>
+          <div className="setting-group setting-group-danger">
+            <label className="setting-label">Hand History</label>
+            <button
+              className={`clear-history-btn ${clearConfirmPending ? 'confirm' : ''}`}
+              onClick={() => {
+                if (clearConfirmPending) {
+                  // Second click - actually clear
+                  setHandHistory([]);
+                  savePersistentHistory([]);
+                  setClearConfirmPending(false);
+                  setScore({ correct: 0, total: 0 });
+                } else {
+                  // First click - ask for confirmation
+                  setClearConfirmPending(true);
+                  // Auto-reset after 3 seconds if not confirmed
+                  setTimeout(() => setClearConfirmPending(false), 3000);
+                }
+              }}
+            >
+              {clearConfirmPending ? 'Click again to confirm' : 'Clear Hand History'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -849,38 +868,38 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
               })()}
             </div>
           ) : (
-            // Recent hands list view
+            // Hands list view
             <>
-              {/* All-time stats from persistent history */}
-              {persistentHistory.length > 0 && (
+              {/* All-time stats */}
+              {handHistory.length > 0 && (
                 <div className="history-stats">
                   <div className="stat-item">
-                    <span className="stat-value">{persistentHistory.length}</span>
+                    <span className="stat-value">{handHistory.length}</span>
                     <span className="stat-label">Total Hands</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value correct">
-                      {persistentHistory.filter(h => h.isCorrect).length}
+                      {handHistory.filter(h => h.isCorrect).length}
                     </span>
                     <span className="stat-label">Correct</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value incorrect">
-                      {persistentHistory.filter(h => !h.isCorrect).length}
+                      {handHistory.filter(h => !h.isCorrect).length}
                     </span>
                     <span className="stat-label">Mistakes</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-value">
-                      {Math.round((persistentHistory.filter(h => h.isCorrect).length / persistentHistory.length) * 100)}%
+                      {Math.round((handHistory.filter(h => h.isCorrect).length / handHistory.length) * 100)}%
                     </span>
                     <span className="stat-label">Accuracy</span>
                   </div>
                 </div>
               )}
-              <div className="history-section-label">Recent Hands</div>
+              <div className="history-section-label">All Hands</div>
               {handHistory.length === 0 ? (
-                <div className="history-empty">No hands played yet this session</div>
+                <div className="history-empty">No hands played yet</div>
               ) : (
                 <div className="history-list">
                   {handHistory.map((item, index) => (
