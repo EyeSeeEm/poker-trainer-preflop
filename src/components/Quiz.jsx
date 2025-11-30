@@ -213,11 +213,8 @@ const analyzeLeaks = (hands) => {
       scenarioStats[scenarioKey].correct++;
     } else {
       scenarioStats[scenarioKey].incorrect++;
-      scenarioStats[scenarioKey].mistakes.push({
-        hand: hand.hand,
-        userAnswer: hand.userAnswer,
-        correctAnswer: hand.correctAnswer
-      });
+      // Store full hand data for detail view
+      scenarioStats[scenarioKey].mistakes.push(hand);
     }
 
     // By category
@@ -378,6 +375,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [showHHHandChart, setShowHHHandChart] = useState(false); // Show hand chart in HH detail
   const [showAnalysis, setShowAnalysis] = useState(false); // Show analysis panel
   const [analysisData, setAnalysisData] = useState(null); // Cached analysis results
+  const [selectedLeakScenario, setSelectedLeakScenario] = useState(null); // Selected scenario in leak analysis
+  const [selectedMistakeIndex, setSelectedMistakeIndex] = useState(null); // Selected mistake index within scenario
+  const [showAnalysisHandChart, setShowAnalysisHandChart] = useState(false); // Show hand chart in analysis detail
   const animationIdRef = useRef(0); // Track current animation to cancel stale ones
   const historyPanelRef = useRef(null); // Ref for click outside detection
   const settingsPanelRef = useRef(null); // Ref for click outside detection
@@ -697,6 +697,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       if (showAnalysis && analysisPanelRef.current && !analysisPanelRef.current.contains(e.target)) {
         if (!e.target.closest('.analysis-btn')) {
           setShowAnalysis(false);
+          setSelectedLeakScenario(null);
+          setSelectedMistakeIndex(null);
+          setShowAnalysisHandChart(false);
         }
       }
     };
@@ -943,6 +946,9 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                 const hands = loadHandsForAnalysis(historyOverview);
                 const analysis = analyzeLeaks(hands);
                 setAnalysisData(analysis);
+                setSelectedLeakScenario(null); // Reset drill-down state
+                setSelectedMistakeIndex(null);
+                setShowAnalysisHandChart(false);
                 setShowAnalysis(!showAnalysis);
               }
             }}
@@ -1055,73 +1061,254 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       {showAnalysis && analysisData && (
         <div className="analysis-panel" ref={analysisPanelRef}>
           <div className="analysis-panel-header">
-            <button
-              className="close-panel-btn"
-              onClick={() => setShowAnalysis(false)}
-              title="Close Analysis"
-            >
-              ×
-            </button>
-            <h3>Leak Analysis</h3>
-            <div className="header-spacer"></div>
+            {selectedLeakScenario !== null ? (
+              selectedMistakeIndex !== null ? (
+                // Mistake detail view header
+                <>
+                  <button
+                    className="close-panel-btn"
+                    onClick={() => {
+                      setSelectedMistakeIndex(null);
+                      setShowAnalysisHandChart(false);
+                    }}
+                    title="Back to Mistakes"
+                  >
+                    ↩
+                  </button>
+                  <div className="detail-nav-group">
+                    <button
+                      className="nav-arrow-btn prev"
+                      onClick={() => {
+                        if (selectedMistakeIndex > 0) {
+                          setSelectedMistakeIndex(selectedMistakeIndex - 1);
+                          setShowAnalysisHandChart(false);
+                        }
+                      }}
+                      disabled={selectedMistakeIndex <= 0}
+                      title="Previous Mistake"
+                    >
+                      ←
+                    </button>
+                    <h3>Mistake {selectedMistakeIndex + 1}/{selectedLeakScenario.mistakes.length}</h3>
+                    <button
+                      className="nav-arrow-btn next"
+                      onClick={() => {
+                        if (selectedMistakeIndex < selectedLeakScenario.mistakes.length - 1) {
+                          setSelectedMistakeIndex(selectedMistakeIndex + 1);
+                          setShowAnalysisHandChart(false);
+                        }
+                      }}
+                      disabled={selectedMistakeIndex >= selectedLeakScenario.mistakes.length - 1}
+                      title="Next Mistake"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <button className="close-panel-btn" style={{ visibility: 'hidden' }}>↩</button>
+                </>
+              ) : (
+                // Scenario mistakes list header
+                <>
+                  <button
+                    className="close-panel-btn"
+                    onClick={() => setSelectedLeakScenario(null)}
+                    title="Back to Analysis"
+                  >
+                    ↩
+                  </button>
+                  <h3>{selectedLeakScenario.label}</h3>
+                  <div className="header-spacer"></div>
+                </>
+              )
+            ) : (
+              // Overview header
+              <>
+                <button
+                  className="close-panel-btn"
+                  onClick={() => {
+                    setShowAnalysis(false);
+                    setSelectedLeakScenario(null);
+                    setSelectedMistakeIndex(null);
+                    setShowAnalysisHandChart(false);
+                  }}
+                  title="Close Analysis"
+                >
+                  ×
+                </button>
+                <h3>Leak Analysis</h3>
+                <div className="header-spacer"></div>
+              </>
+            )}
           </div>
 
           {/* Scrollable content area */}
           <div className="analysis-content">
-            {/* Overall stats */}
-            <div className="analysis-overview">
-              <div className="analysis-stat">
-                <span className="analysis-stat-value">{analysisData.totalHands}</span>
-                <span className="analysis-stat-label">Hands Analyzed</span>
-              </div>
-              <div className="analysis-stat">
-                <span className="analysis-stat-value correct">{analysisData.overallAccuracy.toFixed(0)}%</span>
-                <span className="analysis-stat-label">Accuracy</span>
-              </div>
-              <div className="analysis-stat">
-                <span className="analysis-stat-value incorrect">{analysisData.totalIncorrect}</span>
-                <span className="analysis-stat-label">Mistakes</span>
-              </div>
-            </div>
+            {selectedLeakScenario !== null ? (
+              selectedMistakeIndex !== null ? (
+                // Mistake detail view - shows full hand like HH detail
+                (() => {
+                  const item = selectedLeakScenario.mistakes[selectedMistakeIndex];
+                  if (!item) return null;
+                  return (
+                    <div className="history-detail-view">
+                      <div className="detail-hand-info">
+                        <div className="detail-hand-display">
+                          <HandDisplay hand={item.hand} size="mini" />
+                        </div>
+                        <div className="scenario-label-wrapper detail-scenario-wrapper">
+                          <div
+                            className="detail-scenario clickable"
+                            onClick={() => setShowAnalysisHandChart(!showAnalysisHandChart)}
+                          >
+                            {item.scenario}
+                          </div>
+                          {showAnalysisHandChart && (
+                            <div className="hand-chart-tooltip visible">
+                              <HandChart
+                                category={item.category}
+                                scenarioKey={item.scenarioKey}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-            {/* Leaks by scenario */}
-            <div className="analysis-section">
-              <h4>Scenarios to Work On</h4>
-              {analysisData.scenarios.length === 0 ? (
-                <div className="analysis-empty">Not enough data per scenario yet</div>
-              ) : (
-                <div className="analysis-leaks-list">
-                  {analysisData.scenarios.slice(0, 5).map((scenario, idx) => (
-                    <div key={scenario.key} className={`analysis-leak-item ${scenario.errorRate > 30 ? 'high-error' : scenario.errorRate > 15 ? 'medium-error' : 'low-error'}`}>
-                      <div className="leak-rank">{idx + 1}</div>
-                      <div className="leak-info">
-                        <span className="leak-scenario">{scenario.label}</span>
-                        <span className="leak-stats">
-                          {scenario.incorrect}/{scenario.total} wrong ({scenario.errorRate.toFixed(0)}% error rate)
+                      <div className="detail-result-summary">
+                        <span className="detail-your-answer incorrect">
+                          Your answer: {item.userAnswer}
+                        </span>
+                        <span className="detail-correct-answer">
+                          Correct: {item.correctAnswer}
                         </span>
                       </div>
-                      <div className="leak-indicator">
-                        {scenario.errorRate > 30 ? '🔴' : scenario.errorRate > 15 ? '🟡' : '🟢'}
+
+                      <div className="detail-actions-header">Action Sequence</div>
+                      <div className="detail-actions-list">
+                        {item.actions && item.actions.map((action, actionIdx) => {
+                          const pType = item.playerTypes?.[action.position];
+                          return (
+                            <div
+                              key={actionIdx}
+                              className={`detail-action-item ${action.isHeroAction ? 'hero-action' : ''} ${action.type.toLowerCase()}`}
+                            >
+                              <span className="detail-action-position">{action.position}</span>
+                              <span className={`detail-action-player-type ${pType ? `player-type-${pType}` : ''}`}>
+                                {pType ? pType.toUpperCase() : ''}
+                              </span>
+                              <span className="detail-action-text">{action.text || action.type}</span>
+                            </div>
+                          );
+                        })}
+                        <div className="detail-action-item hero-action hero-decision incorrect">
+                          <span className="detail-action-position">{item.heroPosition}</span>
+                          <span className="detail-action-player-type"></span>
+                          <span className="detail-action-text">
+                            {item.userAnswer}
+                            <span className="result-icon incorrect">✗</span>
+                            <span className="should-be">(should: {item.correctAnswer})</span>
+                          </span>
+                        </div>
                       </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                // Scenario mistakes list view
+                <div className="analysis-mistakes-list">
+                  <div className="analysis-scenario-summary">
+                    <span className="summary-error-rate">
+                      {selectedLeakScenario.errorRate.toFixed(0)}% error rate
+                    </span>
+                    <span className="summary-stats">
+                      {selectedLeakScenario.incorrect} mistakes out of {selectedLeakScenario.total} hands
+                    </span>
+                  </div>
+                  <div className="analysis-section-label">Mistakes</div>
+                  {selectedLeakScenario.mistakes.map((mistake, idx) => (
+                    <div
+                      key={idx}
+                      className="analysis-mistake-item"
+                      onClick={() => setSelectedMistakeIndex(idx)}
+                    >
+                      <div className="mistake-hand">
+                        <HandDisplay hand={mistake.hand} size="mini" />
+                      </div>
+                      <div className="mistake-details">
+                        <span className="mistake-user-answer">{mistake.userAnswer}</span>
+                        <span className="mistake-arrow">→</span>
+                        <span className="mistake-correct-answer">{mistake.correctAnswer}</span>
+                      </div>
+                      <span className="mistake-chevron">›</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              )
+            ) : (
+              // Overview view
+              <>
+                {/* Overall stats */}
+                <div className="analysis-overview">
+                  <div className="analysis-stat">
+                    <span className="analysis-stat-value">{analysisData.totalHands}</span>
+                    <span className="analysis-stat-label">Hands Analyzed</span>
+                  </div>
+                  <div className="analysis-stat">
+                    <span className="analysis-stat-value correct">{analysisData.overallAccuracy.toFixed(0)}%</span>
+                    <span className="analysis-stat-label">Accuracy</span>
+                  </div>
+                  <div className="analysis-stat">
+                    <span className="analysis-stat-value incorrect">{analysisData.totalIncorrect}</span>
+                    <span className="analysis-stat-label">Mistakes</span>
+                  </div>
+                </div>
+
+                {/* Leaks by scenario */}
+                <div className="analysis-section">
+                  <h4>Scenarios to Work On</h4>
+                  {analysisData.scenarios.length === 0 ? (
+                    <div className="analysis-empty">Not enough data per scenario yet</div>
+                  ) : (
+                    <div className="analysis-leaks-list">
+                      {analysisData.scenarios.slice(0, 5).map((scenario, idx) => (
+                        <div
+                          key={scenario.key}
+                          className={`analysis-leak-item clickable ${scenario.errorRate > 30 ? 'high-error' : scenario.errorRate > 15 ? 'medium-error' : 'low-error'}`}
+                          onClick={() => setSelectedLeakScenario(scenario)}
+                        >
+                          <div className="leak-rank">{idx + 1}</div>
+                          <div className="leak-info">
+                            <span className="leak-scenario">{scenario.label}</span>
+                            <span className="leak-stats">
+                              {scenario.incorrect}/{scenario.total} wrong ({scenario.errorRate.toFixed(0)}% error rate)
+                            </span>
+                          </div>
+                          <div className="leak-indicator">
+                            {scenario.errorRate > 30 ? '🔴' : scenario.errorRate > 15 ? '🟡' : '🟢'}
+                          </div>
+                          <span className="leak-chevron">›</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Mark as reviewed button - always visible at bottom */}
-          <button
-            className="analysis-done-btn"
-            onClick={() => {
-              const updatedOverview = markAnalysisDone(historyOverview);
-              setHistoryOverview(updatedOverview);
-              setShowAnalysis(false);
-              setAnalysisData(null);
-            }}
-          >
-            Mark as Reviewed
-          </button>
+          {/* Mark as reviewed button - only visible in overview */}
+          {selectedLeakScenario === null && (
+            <button
+              className="analysis-done-btn"
+              onClick={() => {
+                const updatedOverview = markAnalysisDone(historyOverview);
+                setHistoryOverview(updatedOverview);
+                setShowAnalysis(false);
+                setAnalysisData(null);
+              }}
+            >
+              Mark as Reviewed
+            </button>
+          )}
         </div>
       )}
 

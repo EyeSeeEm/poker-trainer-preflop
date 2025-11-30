@@ -497,6 +497,15 @@
   background: #0d1520;
   border-radius: 8px;
   border-left: 3px solid #3a4a5a;
+  transition: background 0.2s ease;
+}
+
+.analysis-leak-item.clickable {
+  cursor: pointer;
+}
+
+.analysis-leak-item.clickable:hover {
+  background: #1a2530;
 }
 
 .analysis-leak-item.high-error {
@@ -565,6 +574,116 @@
 
 .analysis-done-btn:hover {
   background: #2980b9;
+}
+
+/* Leak chevron for clickable items */
+.leak-chevron {
+  font-size: 18px;
+  color: #5a6a7a;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.analysis-leak-item.clickable:hover .leak-chevron {
+  color: #8a9aa9;
+  transform: translateX(3px);
+}
+
+/* Analysis scenario summary (in scenario drill-down view) */
+.analysis-scenario-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 15px;
+  background: #0d1520;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.summary-error-rate {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e74c3c;
+}
+
+.summary-stats {
+  font-size: 13px;
+  color: #8a9aa9;
+}
+
+/* Analysis section label */
+.analysis-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a9aa9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+/* Analysis mistakes list */
+.analysis-mistakes-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-mistake-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #0d1520;
+  border-radius: 8px;
+  border-left: 3px solid #e74c3c;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.analysis-mistake-item:hover {
+  background: #1a2530;
+}
+
+.mistake-hand {
+  flex-shrink: 0;
+}
+
+.mistake-details {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mistake-user-answer {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e74c3c;
+  text-decoration: line-through;
+}
+
+.mistake-arrow {
+  color: #5a6a7a;
+  font-size: 12px;
+}
+
+.mistake-correct-answer {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2ecc71;
+}
+
+.mistake-chevron {
+  font-size: 18px;
+  color: #5a6a7a;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.analysis-mistake-item:hover .mistake-chevron {
+  color: #8a9aa9;
+  transform: translateX(3px);
 }
 
 /* History Panel */
