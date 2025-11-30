@@ -2,7 +2,11 @@ export const rangeData = {
   open_ranges: {
     ep_open: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "AKs", "AQs", "AJs", "ATs", "A9s", "A5s", "A4s", "A3s", "AKo", "AQo", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "98s", "87s", "76s", "65s"],
     hj_open: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "KQo", "KJo", "QJs", "QTs", "Q9s", "Q8s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "87s", "76s", "65s", "54s"],
+    // CO open - wider than HJ, tighter than BTN
+    co_open: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "A9o", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "KQo", "KJo", "KTo", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "QJo", "QTo", "JTs", "J9s", "J8s", "J7s", "JTo", "T9s", "T8s", "T7s", "98s", "97s", "96s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "53s", "43s"],
     btn_open: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "KQo", "KJo", "KTo", "K9o", "K8o", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s", "QJo", "QTo", "Q9o", "JTs", "J9s", "J8s", "J7s", "J6s", "J5s", "JTo", "J9o", "T9s", "T8s", "T7s", "T6s", "T9o", "T8o", "98s", "97s", "96s", "98o", "87s", "86s", "85s", "76s", "75s", "74s", "65s", "64s", "54s", "53s", "43s"],
+    // SB open (steal) - very wide, only BB to get through. Include more suited gappers and offsuit broadways.
+    sb_open: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "KQo", "KJo", "KTo", "K9o", "K8o", "K7o", "K6o", "K5o", "K4o", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s", "QJo", "QTo", "Q9o", "Q8o", "Q7o", "Q6o", "JTs", "J9s", "J8s", "J7s", "J6s", "J5s", "J4s", "J3s", "JTo", "J9o", "J8o", "J7o", "T9s", "T8s", "T7s", "T6s", "T5s", "T4s", "T9o", "T8o", "T7o", "98s", "97s", "96s", "95s", "94s", "98o", "97o", "87s", "86s", "85s", "84s", "87o", "86o", "76s", "75s", "74s", "73s", "76o", "65s", "64s", "63s", "65o", "54s", "53s", "52s", "54o", "43s", "42s", "32s"],
     btn_vs_limp: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "KQo", "QJs", "QTs", "Q9s", "Q8s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "97s", "87s", "86s", "76s", "75s", "65s", "54s"],
     btn_vs_2_fish: ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "KQo", "KJo", "KTo", "K9o", "K8o", "K7o", "K6o", "K5o", "K4o", "K3o", "K2o", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s", "QJo", "QTo", "Q9o", "Q8o", "Q7o", "Q6o", "Q5o", "Q4o", "Q3o", "JTs", "J9s", "J8s", "J7s", "J6s", "J5s", "J4s", "J3s", "J2s", "JTo", "J9o", "J8o", "J7o", "J6o", "J5o", "J4o", "T9s", "T8s", "T7s", "T6s", "T5s", "T4s", "T3s", "T2s", "T9o", "T8o", "T7o", "T6o", "T5o", "98s", "97s", "96s", "95s", "94s", "93s", "92s", "98o", "97o", "96o", "95o", "87s", "86s", "85s", "84s", "83s", "82s", "87o", "86o", "85o", "76s", "75s", "74s", "73s", "72s", "76o", "75o", "65s", "64s", "63s", "62s", "65o", "64o", "54s", "53s", "52s", "54o", "53o", "43s", "43o", "42s", "32s"]
   },
@@ -44,6 +48,36 @@ export const rangeData = {
       "3bet": ["AA", "AKs", "AJs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "KK", "KQs", "KJs", "KTs", "K9s", "KQo", "QQ", "QJs", "QTs", "Q9s", "JJ", "JTs", "J9s", "TT", "T9s", "99", "98s", "87s"],
       call: ["AQs", "ATs", "88", "77", "76s", "66", "65s", "55", "44", "33", "22"],
       mixed: ["AQs", "ATs", "99", "98s", "88", "87s"]
+    },
+    // BTN vs EP open - respect the tight EP range, need strong hands
+    btn_vs_ep_open: {
+      "3bet": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AJs", "AKo", "AQo"],
+      call: ["TT", "99", "88", "77", "66", "ATs", "A5s", "KQs", "KJs", "QJs", "JTs", "T9s", "98s", "87s", "76s", "65s", "54s"],
+      mixed: ["JJ", "AJs", "AQo"]
+    },
+    // CO vs HJ open - positional battle between regs
+    co_vs_hj_open: {
+      "3bet": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AJs", "A5s", "A4s", "AKo", "AQo", "KQs", "KJs"],
+      call: ["TT", "99", "88", "77", "66", "55", "ATs", "A9s", "KTs", "K9s", "QJs", "QTs", "JTs", "J9s", "T9s", "98s", "87s", "76s", "65s", "54s"],
+      mixed: ["JJ", "AJs", "A5s", "KJs", "TT"]
+    },
+    // BB vs SB open (steal defense) - wide defense since SB opens wide, we have position postflop
+    bb_vs_sb_open: {
+      "3bet": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A5s", "A4s", "A3s", "AKo", "AQo", "AJo", "KQs", "KJs", "KTs", "K9s", "KQo", "QJs", "QTs", "JTs", "J9s", "T9s", "98s", "87s"],
+      call: ["88", "77", "66", "55", "44", "33", "22", "A7s", "A6s", "A2s", "ATo", "A9o", "A8o", "A7o", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "KJo", "KTo", "K9o", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "QJo", "QTo", "J8s", "J7s", "J6s", "JTo", "J9o", "T8s", "T7s", "T6s", "T9o", "97s", "96s", "86s", "85s", "76s", "75s", "74s", "65s", "64s", "54s", "53s", "43s"],
+      mixed: ["99", "88", "A9s", "A8s", "A5s", "A4s", "A3s", "K9s", "QTs", "J9s", "T9s", "98s", "87s"]
+    },
+    // SB 3bet vs BTN steal - aggressive 3bet range since BTN opens wide
+    sb_3bet_vs_btn: {
+      "3bet": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A5s", "A4s", "A3s", "A2s", "AKo", "AQo", "AJo", "ATo", "KQs", "KJs", "KTs", "K9s", "K8s", "KQo", "KJo", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "98s", "87s", "76s", "65s"],
+      call: [],
+      mixed: ["99", "A9s", "A8s", "A7s", "A5s", "A4s", "A3s", "A2s", "K9s", "K8s", "Q9s", "J9s", "T9s", "98s", "87s", "76s", "65s"]
+    },
+    // BB squeeze vs BTN open + SB call - punish dead money
+    bb_squeeze: {
+      "3bet": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A5s", "A4s", "A3s", "AKo", "AQo", "AJo", "KQs", "KJs", "KTs", "K9s", "KQo", "QJs", "QTs", "JTs", "J9s", "T9s", "98s", "87s", "76s"],
+      call: ["88", "77", "66", "55", "44", "33", "22", "A7s", "A6s", "A2s", "K8s", "K7s", "Q9s", "Q8s", "J8s", "T8s", "97s", "86s", "75s", "65s", "54s"],
+      mixed: ["99", "A9s", "A8s", "A5s", "A4s", "A3s", "K9s", "J9s", "T9s", "98s", "87s", "76s"]
     }
   },
   vs_3bet_ranges: {
@@ -66,6 +100,12 @@ export const rangeData = {
       "4bet": ["AA", "KK", "AKs", "AKo"],
       call: ["QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "AQo", "AJo", "ATo", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "KQo", "KJo", "QJs", "QTs", "Q9s", "Q8s", "QJo", "JTs", "J9s", "J8s", "T9s", "T8s", "T7s", "98s", "97s", "96s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "53s", "43s"],
       mixed: ["KK", "AKs", "AKo", "A7s", "KQo", "JJ", "87s"]
+    },
+    // SB vs BB 3bet after SB opened - very tough spot, OOP entire hand with wide open range facing 3bet
+    sb_vs_bb_3bet: {
+      "4bet": ["AA", "KK", "QQ", "AKs", "AKo"],
+      call: ["JJ", "TT", "99", "88", "77", "66", "AQs", "AJs", "ATs", "A9s", "A5s", "KQs", "KJs", "KTs", "QJs", "QTs", "JTs", "J9s", "T9s", "98s", "87s", "76s", "65s", "54s"],
+      mixed: ["QQ", "JJ", "AQs", "AJs", "A5s", "KQs"]
     }
   },
   cold_4bet_ranges: {

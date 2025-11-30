@@ -49,7 +49,8 @@ const SITUATIONS = [
   { key: 'vs_open', label: 'Vs Open' },
   { key: 'vs_3bet', label: 'Vs 3-Bet' },
   { key: 'cold_4bet', label: 'Cold 4-Bet' },
-  { key: 'vs_4bet', label: 'Vs 4-Bet' }
+  { key: 'vs_4bet', label: 'Vs 4-Bet' },
+  { key: 'advanced', label: 'Advanced' }
 ];
 
 const DIFFICULTY_OPTIONS = [
@@ -97,7 +98,34 @@ export const SCENARIO_MAPPINGS = {
   ip_vs_aggro_4bet: { positions: ['BTN'], situation: 'vs_4bet', label: 'IP vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'CO', villainAction: '4bet', villainType: 'aggro' },
   // OOP scenarios (BTN opens, BB 3bets, BTN 4bets - hero is BB out of position vs 4bettor)
   oop_vs_passive_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'OOP vs Passive 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'passive' },
-  oop_vs_aggro_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'OOP vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' }
+  oop_vs_aggro_4bet: { positions: ['BB', 'SB'], situation: 'vs_4bet', label: 'OOP vs Aggro 4bet', category: 'vs_4bet_ranges', villain: 'BTN', villainAction: '4bet', villainType: 'aggro' },
+
+  // ============ ADVANCED SCENARIOS ============
+  // These are also accessible from their respective situations, but grouped together in "Advanced"
+
+  // CO Open - standard late position open (also in 'open')
+  co_open: { positions: ['CO'], situation: 'advanced', label: 'CO Open', category: 'open_ranges', alsoInSituation: 'open' },
+
+  // SB Open (steal) - very wide steal range (also in 'open')
+  sb_open: { positions: ['SB'], situation: 'advanced', label: 'SB Open (Steal)', category: 'open_ranges', alsoInSituation: 'open' },
+
+  // BTN vs EP Open - respecting tight EP range (also in 'vs_open')
+  btn_vs_ep_open: { positions: ['BTN'], situation: 'advanced', label: 'BTN vs EP Open', category: 'vs_open_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', alsoInSituation: 'vs_open' },
+
+  // CO vs HJ Open - reg war between late positions (also in 'vs_open')
+  co_vs_hj_open: { positions: ['CO'], situation: 'advanced', label: 'CO vs HJ Open', category: 'vs_open_ranges', villain: 'HJ', villainAction: 'open', villainType: 'reg', alsoInSituation: 'vs_open' },
+
+  // BB vs SB Open - defending BB vs steal (also in 'vs_open')
+  bb_vs_sb_open: { positions: ['BB'], situation: 'advanced', label: 'BB vs SB Steal', category: 'vs_open_ranges', villain: 'SB', villainAction: 'open', villainType: 'reg', alsoInSituation: 'vs_open' },
+
+  // SB 3bet vs BTN - aggressive blind defense (also in 'vs_open')
+  sb_3bet_vs_btn: { positions: ['SB'], situation: 'advanced', label: 'SB 3bet vs BTN', category: 'vs_open_ranges', villain: 'BTN', villainAction: 'open', villainType: 'reg', alsoInSituation: 'vs_open' },
+
+  // BB Squeeze vs BTN + SB - punishing dead money (also in 'vs_open')
+  bb_squeeze: { positions: ['BB'], situation: 'advanced', label: 'BB Squeeze', category: 'vs_open_ranges', villain: 'BTN', villainAction: 'open', villainType: 'reg', caller: 'SB', callerType: 'fish', alsoInSituation: 'vs_open' },
+
+  // SB vs BB 3bet - tough OOP spot after wide SB open (also in 'vs_3bet')
+  sb_vs_bb_3bet: { positions: ['SB'], situation: 'advanced', label: 'SB vs BB 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'reg', alsoInSituation: 'vs_3bet' }
 };
 
 // Fixed blinds - always 5/5
@@ -156,7 +184,9 @@ export default function Settings({ onStartTraining }) {
   const getAvailableScenarios = () => {
     return Object.entries(SCENARIO_MAPPINGS).filter(([key, mapping]) => {
       const hasMatchingPosition = mapping.positions.some(pos => selectedPositions.has(pos));
-      const hasMatchingSituation = selectedSituations.has(mapping.situation);
+      // Check both primary situation and alsoInSituation
+      const hasMatchingSituation = selectedSituations.has(mapping.situation) ||
+        (mapping.alsoInSituation && selectedSituations.has(mapping.alsoInSituation));
       return hasMatchingPosition && hasMatchingSituation;
     }).map(([key, mapping]) => ({
       key,
