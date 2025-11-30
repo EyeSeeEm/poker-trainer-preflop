@@ -48,11 +48,11 @@ describe('Scenario Mappings - Position Logic', () => {
       expect(scenario.villain).toBe('BTN');
     });
 
-    it('IP vs_4bet scenarios have hero in CO', () => {
+    it('IP vs_4bet scenarios have hero on BTN', () => {
       const scenario = SCENARIO_MAPPINGS.ip_vs_aggro_4bet;
-      // In IP vs_4bet: Hero is in CO, facing BTN 4bet
-      expect(scenario.positions).toContain('CO');
-      expect(scenario.villain).toBe('BTN');
+      // In IP vs_4bet: Hero is BTN, facing CO 4bet (CO opens, BTN 3bets, CO 4bets)
+      expect(scenario.positions).toContain('BTN');
+      expect(scenario.villain).toBe('CO');
     });
 
     it('vs_4bet action sequence makes positional sense', () => {
