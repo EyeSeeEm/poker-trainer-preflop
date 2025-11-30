@@ -96,13 +96,13 @@ export default function PokerTable({
     const action = getActionForSeat(seatId);
     if (action && isActionVisible(seatId)) {
       if (action.type === 'Raise' || action.type === 'open') {
-        return blinds.bb * 2.5; // Standard open raise
+        return blinds.bb * 3; // Standard open raise
       } else if (action.type === '3bet') {
-        return blinds.bb * 9; // Typical 3bet
+        return blinds.bb * 10; // Typical 3bet
       } else if (action.type === '4bet') {
-        return blinds.bb * 22; // Typical 4bet
+        return blinds.bb * 24; // Typical 4bet
       } else if (action.type === 'Call') {
-        return blinds.bb * 2.5; // Calling an open
+        return blinds.bb * 3; // Calling an open
       }
     }
 
@@ -128,8 +128,8 @@ export default function PokerTable({
           // Limp completes to BB
           pot += blinds.bb;
         } else if (action.type === 'Raise' || action.type === 'open') {
-          // Open raise is 2.5BB - adds 2.5BB to pot (minus any blind already posted)
-          const raiseAmount = blinds.bb * 2.5;
+          // Open raise is 3BB - adds 3BB to pot (minus any blind already posted)
+          const raiseAmount = blinds.bb * 3;
           if (pos === 'SB') {
             pot += raiseAmount - blinds.sb; // SB already posted
           } else if (pos === 'BB') {
@@ -139,8 +139,8 @@ export default function PokerTable({
           }
           currentBetToCall = raiseAmount;
         } else if (action.type === '3bet') {
-          // 3bet is 9BB
-          const threebetAmount = blinds.bb * 9;
+          // 3bet is 10BB
+          const threebetAmount = blinds.bb * 10;
           if (pos === 'SB') {
             pot += threebetAmount - blinds.sb;
           } else if (pos === 'BB') {
@@ -150,8 +150,8 @@ export default function PokerTable({
           }
           currentBetToCall = threebetAmount;
         } else if (action.type === '4bet') {
-          // 4bet is 22BB
-          const fourbetAmount = blinds.bb * 22;
+          // 4bet is 24BB
+          const fourbetAmount = blinds.bb * 24;
           pot += fourbetAmount;
           currentBetToCall = fourbetAmount;
         } else if (action.type === 'Call') {
