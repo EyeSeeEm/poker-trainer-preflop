@@ -623,12 +623,17 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   return (
     <div className={`quiz ${userAnswer !== null ? (correctAnswer && correctAnswer.split('/').includes(userAnswer) ? 'result-correct' : 'result-incorrect') : ''}`}>
       <div className="quiz-header">
-        <button className="back-btn" onClick={onBack}>
-          ← Back
+        <button className="back-btn" onClick={onBack} title="Back to Menu">
+          ✕
         </button>
         <button
           className="score-display"
-          onClick={() => setShowHistory(!showHistory)}
+          onClick={() => {
+            if (!showHistory) {
+              setSelectedHistoryIndex(null); // Reset to overview when opening
+            }
+            setShowHistory(!showHistory);
+          }}
           title="Hand History"
         >
           <span className="score">{score.correct}/{score.total} ({percentage}%)</span>
@@ -716,25 +721,6 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
           <div className="history-panel-header">
             {selectedHistoryIndex !== null ? (
               <>
-                <div className="detail-nav-group">
-                  <button
-                    className="nav-arrow-btn prev"
-                    onClick={() => setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1))}
-                    disabled={selectedHistoryIndex >= handHistory.length - 1}
-                    title="Previous Hand (Older)"
-                  >
-                    ←
-                  </button>
-                  <h3>Hand Details</h3>
-                  <button
-                    className="nav-arrow-btn next"
-                    onClick={() => setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0))}
-                    disabled={selectedHistoryIndex <= 0}
-                    title="Next Hand (Newer)"
-                  >
-                    →
-                  </button>
-                </div>
                 <button
                   className="close-detail-btn"
                   onClick={() => setSelectedHistoryIndex(null)}
@@ -742,6 +728,25 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                 >
                   ↩
                 </button>
+                <div className="detail-nav-group">
+                  <button
+                    className="nav-arrow-btn prev"
+                    onClick={() => setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0))}
+                    disabled={selectedHistoryIndex <= 0}
+                    title="Next Hand (Newer)"
+                  >
+                    ←
+                  </button>
+                  <h3>Hand Details</h3>
+                  <button
+                    className="nav-arrow-btn next"
+                    onClick={() => setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1))}
+                    disabled={selectedHistoryIndex >= handHistory.length - 1}
+                    title="Previous Hand (Older)"
+                  >
+                    →
+                  </button>
+                </div>
               </>
             ) : (
               <h3>Hand History</h3>
