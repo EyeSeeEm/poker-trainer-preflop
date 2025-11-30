@@ -177,17 +177,19 @@
 
 .close-detail-btn:hover {
   color: #85c1e9;
-  transform: translateY(-2px);
 }
 
-/* When in detail view, center the title between nav arrows */
-.history-panel-header:has(.nav-arrow-btn) {
-  gap: 4px;
-}
-
-.history-panel-header:has(.nav-arrow-btn) h3 {
+/* Navigation group - arrows + title centered together */
+.detail-nav-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   flex: 1;
-  text-align: center;
+}
+
+.detail-nav-group h3 {
+  margin: 0;
 }
 
 .close-btn {
