@@ -130,22 +130,64 @@
   color: #e0e0e0;
 }
 
-/* Back arrow button in history detail view */
-.back-arrow-btn {
+/* Navigation arrow buttons in history detail view */
+.nav-arrow-btn {
   background: none;
   border: none;
   color: #5dade2;
   font-size: 20px;
   cursor: pointer;
-  padding: 4px 12px 4px 0;
+  padding: 4px 8px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
 }
 
-.back-arrow-btn:hover {
+.nav-arrow-btn:hover:not(:disabled) {
   color: #85c1e9;
+}
+
+.nav-arrow-btn.prev:hover:not(:disabled) {
   transform: translateX(-3px);
+}
+
+.nav-arrow-btn.next:hover:not(:disabled) {
+  transform: translateX(3px);
+}
+
+.nav-arrow-btn:disabled {
+  color: #4a5a6a;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Close detail view button (up arrow) */
+.close-detail-btn {
+  background: none;
+  border: none;
+  color: #5dade2;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.close-detail-btn:hover {
+  color: #85c1e9;
+  transform: translateY(-2px);
+}
+
+/* When in detail view, center the title between nav arrows */
+.history-panel-header:has(.nav-arrow-btn) {
+  gap: 4px;
+}
+
+.history-panel-header:has(.nav-arrow-btn) h3 {
+  flex: 1;
+  text-align: center;
 }
 
 .close-btn {

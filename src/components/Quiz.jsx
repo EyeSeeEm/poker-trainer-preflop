@@ -717,13 +717,29 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
             {selectedHistoryIndex !== null ? (
               <>
                 <button
-                  className="back-arrow-btn"
-                  onClick={() => setSelectedHistoryIndex(null)}
-                  title="Back to Recent Hands"
+                  className="nav-arrow-btn prev"
+                  onClick={() => setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1))}
+                  disabled={selectedHistoryIndex >= handHistory.length - 1}
+                  title="Previous Hand (Older)"
                 >
                   ←
                 </button>
                 <h3>Hand Details</h3>
+                <button
+                  className="nav-arrow-btn next"
+                  onClick={() => setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0))}
+                  disabled={selectedHistoryIndex <= 0}
+                  title="Next Hand (Newer)"
+                >
+                  →
+                </button>
+                <button
+                  className="close-detail-btn"
+                  onClick={() => setSelectedHistoryIndex(null)}
+                  title="Back to Hand History"
+                >
+                  ↑
+                </button>
               </>
             ) : (
               <h3>Hand History</h3>
