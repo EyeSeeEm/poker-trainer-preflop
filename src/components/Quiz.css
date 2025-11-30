@@ -131,6 +131,28 @@
   font-size: 16px;
   font-weight: 600;
   color: #e0e0e0;
+  flex: 1;
+  text-align: center;
+}
+
+/* Close panel button (X in top-left of history panel) */
+.close-panel-btn {
+  background: none;
+  border: none;
+  color: #8a9aa9;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  width: 36px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.close-panel-btn:hover {
+  color: #e0e0e0;
 }
 
 /* Navigation arrow buttons in history detail view */
@@ -187,7 +209,6 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex: 1;
 }
 
 .detail-nav-group h3 {

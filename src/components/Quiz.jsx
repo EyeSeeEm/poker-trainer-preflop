@@ -639,7 +639,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     <div className={`quiz ${userAnswer !== null ? (correctAnswer && correctAnswer.split('/').includes(userAnswer) ? 'result-correct' : 'result-incorrect') : ''}`}>
       <div className="quiz-header">
         <button className="back-btn" onClick={onBack} title="Back to Menu">
-          ✕
+          ⌂
         </button>
         <button
           className="score-display"
@@ -784,10 +784,20 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                     →
                   </button>
                 </div>
-                <div className="header-spacer"></div>
+                <button className="close-detail-btn" style={{ visibility: 'hidden' }}>↩</button>
               </>
             ) : (
-              <h3>Hand History</h3>
+              <>
+                <button
+                  className="close-panel-btn"
+                  onClick={() => setShowHistory(false)}
+                  title="Close Hand History"
+                >
+                  ×
+                </button>
+                <h3>Hand History</h3>
+                <div className="header-spacer"></div>
+              </>
             )}
           </div>
 
