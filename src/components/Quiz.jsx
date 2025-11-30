@@ -427,6 +427,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     if (mapping.callerType && mapping.caller) {
       types[mapping.caller] = mapping.callerType;
     }
+    // Fish in blinds
+    if (mapping.sbType) {
+      types['SB'] = mapping.sbType;
+    }
+    if (mapping.bbType) {
+      types['BB'] = mapping.bbType;
+    }
 
     // === OPEN RANGES: Hero opens ===
     if (mapping.category === 'open_ranges') {

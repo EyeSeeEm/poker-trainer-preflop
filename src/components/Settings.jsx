@@ -65,7 +65,7 @@ export const SCENARIO_MAPPINGS = {
   hj_open: { positions: ['HJ'], situation: 'open', label: 'HJ Open', category: 'open_ranges' },
   btn_open: { positions: ['BTN'], situation: 'open', label: 'BTN Open', category: 'open_ranges' },
   btn_vs_limp: { positions: ['BTN'], situation: 'open', label: 'BTN vs Limp', category: 'open_ranges', limper: 'HJ', limperType: 'fish' },
-  btn_vs_2_fish: { positions: ['BTN'], situation: 'open', label: 'BTN vs 2 Fish', category: 'open_ranges', limper: 'HJ', limperType: 'fish', limper2: 'CO', limper2Type: 'fish' },
+  btn_vs_2_fish: { positions: ['BTN'], situation: 'open', label: 'BTN vs 2 Fish', category: 'open_ranges', sbType: 'fish', bbType: 'fish' },
 
   // Vs Open Ranges
   hj_vs_ep_open: { positions: ['HJ'], situation: 'vs_open', label: 'HJ vs EP Open', category: 'vs_open_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg' },
