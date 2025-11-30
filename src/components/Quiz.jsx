@@ -119,9 +119,13 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
   const [clearConfirmPending, setClearConfirmPending] = useState(false); // Two-click clear confirmation
   const [detailViewMode, setDetailViewMode] = useState('visual'); // 'visual' or 'text'
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showHandChart, setShowHandChart] = useState(false); // Show hand chart cheat sheet
+  const [showHHHandChart, setShowHHHandChart] = useState(false); // Show hand chart in HH detail
   const animationIdRef = useRef(0); // Track current animation to cancel stale ones
   const historyPanelRef = useRef(null); // Ref for click outside detection
   const settingsPanelRef = useRef(null); // Ref for click outside detection
+  const handChartRef = useRef(null); // Ref for hand chart click outside detection
+  const hhHandChartRef = useRef(null); // Ref for HH hand chart click outside detection
 
   // Get a random scenario from the available ones
   const getRandomScenario = useCallback(() => {
@@ -360,6 +364,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
     setCurrentActionIndex(-1);
     setShowHeroHighlight(false);
     setNextToActPosition(null);
+    setShowHandChart(false);
 
     const { actions: actionSequence, types } = buildActionSequence(scenario);
     setActions(actionSequence);
@@ -406,11 +411,23 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
           setShowSettings(false);
         }
       }
+      // Close hand chart when clicking outside
+      if (showHandChart && handChartRef.current && !handChartRef.current.contains(e.target)) {
+        if (!e.target.closest('.scenario-label.clickable')) {
+          setShowHandChart(false);
+        }
+      }
+      // Close HH hand chart when clicking outside
+      if (showHHHandChart && hhHandChartRef.current && !hhHandChartRef.current.contains(e.target)) {
+        if (!e.target.closest('.detail-scenario.clickable')) {
+          setShowHHHandChart(false);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showHistory, showSettings]);
+  }, [showHistory, showSettings, showHandChart, showHHHandChart]);
 
   const handleAnswer = (answer) => {
     if (userAnswer !== null || isAnimating || !showHeroHighlight) return;
@@ -751,7 +768,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                 <div className="detail-nav-group">
                   <button
                     className="nav-arrow-btn prev"
-                    onClick={() => setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0))}
+                    onClick={() => { setSelectedHistoryIndex(Math.max(selectedHistoryIndex - 1, 0)); setShowHHHandChart(false); }}
                     disabled={selectedHistoryIndex <= 0}
                     title="Next Hand (Newer)"
                   >
@@ -760,7 +777,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                   <h3>Hand Details</h3>
                   <button
                     className="nav-arrow-btn next"
-                    onClick={() => setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1))}
+                    onClick={() => { setSelectedHistoryIndex(Math.min(selectedHistoryIndex + 1, handHistory.length - 1)); setShowHHHandChart(false); }}
                     disabled={selectedHistoryIndex >= handHistory.length - 1}
                     title="Previous Hand (Older)"
                   >
@@ -787,13 +804,20 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                         <HandDisplay hand={item.hand} size="mini" />
                       </div>
                       <div className="scenario-label-wrapper detail-scenario-wrapper">
-                        <div className="detail-scenario">{item.scenario}</div>
-                        <div className="hand-chart-tooltip">
-                          <HandChart
-                            category={item.category}
-                            scenarioKey={item.scenarioKey}
-                          />
+                        <div
+                          className="detail-scenario clickable"
+                          onClick={() => setShowHHHandChart(!showHHHandChart)}
+                        >
+                          {item.scenario}
                         </div>
+                        {showHHHandChart && (
+                          <div className="hand-chart-tooltip visible" ref={hhHandChartRef}>
+                            <HandChart
+                              category={item.category}
+                              scenarioKey={item.scenarioKey}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -915,7 +939,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                     <div
                       key={index}
                       className={`history-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
-                      onClick={() => setSelectedHistoryIndex(index)}
+                      onClick={() => { setSelectedHistoryIndex(index); setShowHHHandChart(false); }}
                     >
                       <div className="history-hand">
                         <HandDisplay hand={item.hand} size="mini" />
@@ -944,14 +968,21 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
       )}
 
       <div className="scenario-label-wrapper">
-        <div className="scenario-label">{currentScenario.label}</div>
-        <div className="hand-chart-tooltip">
-          <HandChart
-            category={currentScenario.category}
-            scenarioKey={currentScenario.key}
-            title={currentScenario.label}
-          />
+        <div
+          className="scenario-label clickable"
+          onClick={() => setShowHandChart(!showHandChart)}
+        >
+          {currentScenario.label}
         </div>
+        {showHandChart && (
+          <div className="hand-chart-tooltip visible" ref={handChartRef}>
+            <HandChart
+              category={currentScenario.category}
+              scenarioKey={currentScenario.key}
+              title={currentScenario.label}
+            />
+          </div>
+        )}
       </div>
 
       <PokerTable

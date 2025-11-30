@@ -139,10 +139,23 @@
   pointer-events: none;
 }
 
-.scenario-label-wrapper:hover .hand-chart-tooltip {
+/* Click to show behavior - tooltip shown via React state */
+.hand-chart-tooltip.visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+/* Clickable scenario label */
+.scenario-label.clickable,
+.detail-scenario.clickable {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.scenario-label.clickable:hover,
+.detail-scenario.clickable:hover {
+  color: #5dade2;
 }
 
 /* Detail view in HH panel - keep scenario centered */
