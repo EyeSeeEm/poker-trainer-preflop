@@ -747,6 +747,7 @@ export default function Quiz({ scenarios, blinds = { sb: 5, bb: 5 }, difficulty 
                     →
                   </button>
                 </div>
+                <div className="header-spacer"></div>
               </>
             ) : (
               <h3>Hand History</h3>

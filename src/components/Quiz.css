@@ -194,6 +194,11 @@
   margin: 0;
 }
 
+/* Spacer to balance the close button on the left */
+.header-spacer {
+  width: 36px; /* Match close-detail-btn width */
+}
+
 .close-btn {
   background: none;
   border: none;
