@@ -182,7 +182,7 @@ describe('Action Sequence Building', () => {
       addFolds(getPositionsBefore(scenario.villain));
 
       // Villain opens
-      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise' });
 
       // For squeeze: there's a caller between villain and hero
       if (scenario.caller) {
@@ -200,13 +200,13 @@ describe('Action Sequence Building', () => {
       addFolds(getPositionsBefore(heroPosition));
 
       // Hero opens
-      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise 2.5BB', isHeroAction: true });
+      actions.push({ position: heroPosition, type: 'Raise', text: 'Raise', isHeroAction: true });
 
       // Folds from hero to villain
       addFolds(getPositionsBetween(heroPosition, scenario.villain));
 
       // Villain 3-bets
-      actions.push({ position: scenario.villain, type: '3bet', text: '3-Bet 9BB' });
+      actions.push({ position: scenario.villain, type: '3bet', text: '3-Bet' });
     }
 
     // === VS 4BET RANGES: Villain opened, hero 3bet, villain 4bets ===
@@ -215,16 +215,16 @@ describe('Action Sequence Building', () => {
       addFolds(getPositionsBefore(scenario.villain));
 
       // Villain opens
-      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise' });
 
       // Folds from villain to hero
       addFolds(getPositionsBetween(scenario.villain, heroPosition));
 
       // Hero 3-bets
-      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet 9BB', isHeroAction: true });
+      actions.push({ position: heroPosition, type: '3bet', text: '3-Bet', isHeroAction: true });
 
       // Villain 4-bets
-      actions.push({ position: scenario.villain, type: '4bet', text: '4-Bet 22BB' });
+      actions.push({ position: scenario.villain, type: '4bet', text: '4-Bet' });
     }
 
     // === COLD 4BET RANGES: V1 opens, V2 3bets, hero cold 4bets ===
@@ -233,13 +233,13 @@ describe('Action Sequence Building', () => {
       addFolds(getPositionsBefore(scenario.villain));
 
       // Villain1 opens
-      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise 2.5BB' });
+      actions.push({ position: scenario.villain, type: 'Raise', text: 'Raise' });
 
       // Folds from villain1 to villain2
       addFolds(getPositionsBetween(scenario.villain, scenario.villain2));
 
       // Villain2 3-bets
-      actions.push({ position: scenario.villain2, type: '3bet', text: '3-Bet 9BB' });
+      actions.push({ position: scenario.villain2, type: '3bet', text: '3-Bet' });
 
       // Folds from villain2 to hero
       addFolds(getPositionsBetween(scenario.villain2, heroPosition));
