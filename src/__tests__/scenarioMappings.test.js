@@ -95,20 +95,20 @@ describe('Scenario Mappings - Position Logic', () => {
   });
 
   describe('cold 4bet scenarios', () => {
-    it('OOP cold 4bet has hero in CO', () => {
+    it('OOP cold 4bet has hero in SB', () => {
       const scenario = SCENARIO_MAPPINGS.oop_cold_4bet_vs_tight;
-      // Villain1 (EP) opens, Villain2 (HJ) 3-bets, Hero (CO) 4-bets
-      expect(scenario.villain).toBe('EP');
-      expect(scenario.villain2).toBe('HJ');
+      // CO opens, BTN 3-bets, Hero (SB) cold 4-bets
+      // SB is OOP vs both CO and BTN postflop
+      expect(scenario.villain).toBe('CO');
+      expect(scenario.villain2).toBe('BTN');
       expect(scenario.villain2Action).toBe('3bet');
-      expect(scenario.positions).toContain('CO');
-      expect(actsBefore('EP', 'CO')).toBe(true);
-      expect(actsBefore('HJ', 'CO')).toBe(true);
+      expect(scenario.positions).toContain('SB');
     });
 
     it('IP cold 4bet has hero on BTN', () => {
       const scenario = SCENARIO_MAPPINGS.ip_cold_4bet_vs_tight;
       // Villain1 (EP) opens, Villain2 (HJ) 3-bets, Hero (BTN) 4-bets
+      // BTN has position on everyone postflop
       expect(scenario.villain).toBe('EP');
       expect(scenario.villain2).toBe('HJ');
       expect(scenario.villain2Action).toBe('3bet');
@@ -285,26 +285,26 @@ describe('Action Sequence Building', () => {
     const scenario = SCENARIO_MAPPINGS.oop_vs_aggro_3bet;
     const actions = buildActionSequence(scenario);
 
-    // Hero is EP (UTG), Villain is BB
-    // Sequence: UTG opens -> HJ folds -> CO folds -> BTN folds -> SB folds -> BB 3bets
-    // So 6 actions total
+    // Hero is EP (UTG), Villain is BTN (hero is OOP vs BTN postflop)
+    // Sequence: UTG opens -> HJ folds -> CO folds -> BTN 3bets
+    // So 4 actions total
 
     // Action 0: Hero opens
     expect(actions[0].type).toBe('Raise');
     expect(actions[0].isHeroAction).toBe(true);
 
-    // Actions 1-4: Quick folds from HJ, CO, BTN, SB
-    const foldActions = actions.slice(1, 5);
-    expect(foldActions.length).toBe(4);
+    // Actions 1-2: Quick folds from HJ, CO
+    const foldActions = actions.slice(1, 3);
+    expect(foldActions.length).toBe(2);
     foldActions.forEach(action => {
       expect(action.type).toBe('Fold');
       expect(action.isQuickFold).toBe(true);
     });
-    expect(foldActions.map(a => a.position)).toEqual(['HJ', 'CO', 'BTN', 'SB']);
+    expect(foldActions.map(a => a.position)).toEqual(['HJ', 'CO']);
 
     // Last action: Villain 3-bets
     const lastAction = actions[actions.length - 1];
-    expect(lastAction.position).toBe('BB');
+    expect(lastAction.position).toBe('BTN');
     expect(lastAction.type).toBe('3bet');
   });
 
@@ -312,16 +312,27 @@ describe('Action Sequence Building', () => {
     const scenario = SCENARIO_MAPPINGS.oop_cold_4bet_vs_tight;
     const actions = buildActionSequence(scenario);
 
-    // Should have 2 actions: villain1 open, villain2 3bet
-    expect(actions.length).toBe(2);
+    // OOP cold 4bet: CO opens, BTN 3bets, SB (hero) cold 4bets
+    // Sequence: UTG folds, HJ folds, CO opens, BTN 3bets
+    // Folds before CO: UTG, HJ
+    // Folds between CO and BTN: none
+    // Folds between BTN and SB: none
+    // Total: 4 actions (2 folds + open + 3bet)
+    expect(actions.length).toBe(4);
 
-    // Action 0: Villain1 opens
-    expect(actions[0].position).toBe('EP');
-    expect(actions[0].type).toBe('Raise');
-
-    // Action 1: Villain2 3-bets
+    // Actions 0-1: UTG, HJ fold
+    expect(actions[0].position).toBe('UTG');
+    expect(actions[0].type).toBe('Fold');
     expect(actions[1].position).toBe('HJ');
-    expect(actions[1].type).toBe('3bet');
+    expect(actions[1].type).toBe('Fold');
+
+    // Action 2: Villain1 opens
+    expect(actions[2].position).toBe('CO');
+    expect(actions[2].type).toBe('Raise');
+
+    // Action 3: Villain2 3-bets
+    expect(actions[3].position).toBe('BTN');
+    expect(actions[3].type).toBe('3bet');
   });
 
   it('vs_open builds correct sequence: villain opens', () => {

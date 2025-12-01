@@ -79,16 +79,18 @@ export const SCENARIO_MAPPINGS = {
   btn_vs_co_pro_open: { positions: ['BTN'], situation: 'vs_open', label: 'BTN vs CO Pro Open', category: 'vs_open_ranges', villain: 'CO', villainAction: 'open', villainType: 'pro' },
 
   // Vs 3bet Ranges
-  oop_vs_passive_3bet: { positions: ['EP', 'HJ', 'CO'], situation: 'vs_3bet', label: 'OOP vs Passive 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'passive' },
-  oop_vs_aggro_3bet: { positions: ['EP', 'HJ', 'CO'], situation: 'vs_3bet', label: 'OOP vs Aggro 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'aggro' },
+  // OOP: Hero opens from EP/HJ/CO, gets 3bet by BTN - hero is OOP vs BTN postflop
+  oop_vs_passive_3bet: { positions: ['EP', 'HJ', 'CO'], situation: 'vs_3bet', label: 'OOP vs Passive 3bet', category: 'vs_3bet_ranges', villain: 'BTN', villainAction: '3bet', villainType: 'passive' },
+  oop_vs_aggro_3bet: { positions: ['EP', 'HJ', 'CO'], situation: 'vs_3bet', label: 'OOP vs Aggro 3bet', category: 'vs_3bet_ranges', villain: 'BTN', villainAction: '3bet', villainType: 'aggro' },
+  // IP: Hero opens from BTN, gets 3bet by BB - hero has position on BB postflop
   ip_vs_passive_3bet: { positions: ['BTN'], situation: 'vs_3bet', label: 'IP vs Passive 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'passive' },
   ip_vs_aggro_3bet: { positions: ['BTN'], situation: 'vs_3bet', label: 'IP vs Aggro 3bet', category: 'vs_3bet_ranges', villain: 'BB', villainAction: '3bet', villainType: 'aggro' },
 
   // Cold 4bet Ranges - split by IP/OOP
-  // OOP: CO cold 4bets after EP opens, HJ 3bets (CO is OOP vs HJ who 3bet)
-  oop_cold_4bet_vs_tight: { positions: ['CO'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
-  oop_cold_4bet_vs_aggro: { positions: ['CO'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
-  // IP: BTN cold 4bets after EP opens, HJ 3bets (BTN has position on everyone)
+  // OOP: CO opens, BTN 3bets, SB (hero) cold 4bets - SB is OOP vs both CO and BTN
+  oop_cold_4bet_vs_tight: { positions: ['SB'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'CO', villainAction: 'open', villainType: 'tight', villain2: 'BTN', villain2Action: '3bet', villain2Type: 'tight' },
+  oop_cold_4bet_vs_aggro: { positions: ['SB'], situation: 'cold_4bet', label: 'OOP Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'CO', villainAction: 'open', villainType: 'reg', villain2: 'BTN', villain2Action: '3bet', villain2Type: 'aggro' },
+  // IP: EP opens, HJ 3bets, BTN (hero) cold 4bets - BTN has position on everyone
   ip_cold_4bet_vs_tight: { positions: ['BTN'], situation: 'cold_4bet', label: 'IP Cold 4bet vs Tight', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'tight', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'tight' },
   ip_cold_4bet_vs_aggro: { positions: ['BTN'], situation: 'cold_4bet', label: 'IP Cold 4bet vs Aggro', category: 'cold_4bet_ranges', villain: 'EP', villainAction: 'open', villainType: 'reg', villain2: 'HJ', villain2Action: '3bet', villain2Type: 'aggro' },
 
@@ -143,12 +145,11 @@ export default function Settings({ onStartTraining }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState(
     savedSelections?.difficulty || 'medium'
   );
-  const [wigglingCard, setWigglingCard] = useState(null);
+  const [wiggleKey, setWiggleKey] = useState(0);
 
-  // Handle card click/tap for wiggle animation
-  const handleCardClick = (cardNum) => {
-    setWigglingCard(cardNum);
-    setTimeout(() => setWigglingCard(null), 500);
+  // Handle card click/tap for wiggle animation - increment key to restart animation
+  const handleCardClick = () => {
+    setWiggleKey(k => k + 1);
   };
 
   // Save selections to localStorage whenever they change
@@ -212,15 +213,9 @@ export default function Settings({ onStartTraining }) {
     <div className="settings">
       {/* Hero section with decorative cards */}
       <div className="hero-section">
-        <div className="decorative-cards">
-          <div
-            className={`deco-card card-1 ${wigglingCard === 1 ? 'wiggling' : ''}`}
-            onClick={() => handleCardClick(1)}
-          >A<span className="suit spade">♠</span></div>
-          <div
-            className={`deco-card card-2 ${wigglingCard === 2 ? 'wiggling' : ''}`}
-            onClick={() => handleCardClick(2)}
-          >K<span className="suit spade">♠</span></div>
+        <div className="decorative-cards" onClick={handleCardClick} key={wiggleKey}>
+          <div className="deco-card card-1 wiggling">A<span className="suit spade">♠</span></div>
+          <div className="deco-card card-2 wiggling">K<span className="suit spade">♠</span></div>
         </div>
         <h1>ESM's Poker Preflop Trainer</h1>
         <p className="subtitle">Master your preflop ranges</p>
