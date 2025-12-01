@@ -80,13 +80,7 @@
   z-index: 2;
 }
 
-/* Wiggle animations */
-@keyframes wiggle-small {
-  0%, 100% { transform: rotate(var(--base-rotate)) translateY(var(--base-y)); }
-  25% { transform: rotate(calc(var(--base-rotate) - 3deg)) translateY(var(--base-y)); }
-  75% { transform: rotate(calc(var(--base-rotate) + 3deg)) translateY(var(--base-y)); }
-}
-
+/* Wiggle animation */
 @keyframes wiggle-big {
   0%, 100% { transform: rotate(var(--base-rotate)) translateY(var(--base-y)); }
   10% { transform: rotate(calc(var(--base-rotate) - 15deg)) translateY(calc(var(--base-y) - 5px)); }
@@ -106,18 +100,8 @@
   --base-y: 5px;
 }
 
-/* Hover wiggle on PC (small) */
-.deco-card:hover {
-  animation: wiggle-small 0.4s ease-in-out;
-}
-
-/* Click/tap wiggle (big) */
+/* Click/tap wiggle - both cards wiggle together */
 .deco-card.wiggling {
-  animation: wiggle-big 0.5s ease-in-out;
-}
-
-/* Override hover animation when wiggling */
-.deco-card.wiggling:hover {
   animation: wiggle-big 0.5s ease-in-out;
 }
 
